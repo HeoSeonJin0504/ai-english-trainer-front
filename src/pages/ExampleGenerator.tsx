@@ -6,7 +6,6 @@ import { Card } from '../components/Card';
 import { Loading } from '../components/Loading';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { apiService } from '../services/api';
-import { saveToVocabulary } from '../utils/vocabulary';
 
 const Container = styled.div`
   max-width: 800px;
@@ -53,6 +52,7 @@ export default function ExampleGenerator() {
   const [examples, setExamples] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [saveLoading, setSaveLoading] = useState<number | null>(null);
 
   const handleGenerate = async () => {
     if (!word.trim()) {
@@ -65,17 +65,41 @@ export default function ExampleGenerator() {
     
     try {
       const data = await apiService.generateExamples(word);
-      setExamples(data.examples);
+      console.log('받은 데이터:', data); // 디버깅용
+      
+      // examples 배열 처리
+      const processedExamples = (data.examples || [])
+        .map((ex: string) => ex.trim())
+        .filter((ex: string) => ex.length > 0)
+        .map((ex: string) => {
+          // 번호 제거 (예: "1. ", "1) " 등)
+          return ex.replace(/^\d+[\.\)]\s*/, '');
+        });
+      
+      console.log('처리된 예문:', processedExamples); // 디버깅용
+      setExamples(processedExamples);
+      
+      if (processedExamples.length === 0) {
+        setError('예문을 생성하지 못했습니다. 다시 시도해주세요.');
+      }
     } catch (err: any) {
+      console.error('에러 발생:', err); // 디버깅용
       setError(err.message || '예문 생성에 실패했습니다.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSave = (example: string) => {
-    saveToVocabulary({ word, example, date: new Date().toISOString() });
-    alert('단어장에 저장되었습니다!');
+  const handleSave = async (example: string, index: number) => {
+    setSaveLoading(index);
+    try {
+      await apiService.addWord(word, [example]);
+      alert('단어장에 저장되었습니다!');
+    } catch (err: any) {
+      alert(err.message || '저장에 실패했습니다.');
+    } finally {
+      setSaveLoading(null);
+    }
   };
 
   return (
@@ -103,8 +127,12 @@ export default function ExampleGenerator() {
           {examples.map((example, index) => (
             <ExampleCard key={index}>
               <p>{example}</p>
-              <Button onClick={() => handleSave(example)} variant="secondary">
-                단어장에 저장
+              <Button 
+                onClick={() => handleSave(example, index)} 
+                variant="secondary"
+                disabled={saveLoading === index}
+              >
+                {saveLoading === index ? '저장 중...' : '단어장에 저장'}
               </Button>
             </ExampleCard>
           ))}

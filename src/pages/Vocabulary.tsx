@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
-import { getVocabulary, removeFromVocabulary, type VocabularyItem } from '../utils/vocabulary';
+import { Loading } from '../components/Loading';
+import { ErrorMessage } from '../components/ErrorMessage';
+import { apiService, type Word } from '../services/api';
 
 const Container = styled.div`
   max-width: 800px;
@@ -65,21 +67,35 @@ const DateText = styled.p`
 `;
 
 export default function Vocabulary() {
-  const [items, setItems] = useState<VocabularyItem[]>([]);
+  const [items, setItems] = useState<Word[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     loadVocabulary();
   }, []);
 
-  const loadVocabulary = () => {
-    const vocab = getVocabulary();
-    setItems(vocab);
+  const loadVocabulary = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await apiService.getWords();
+      setItems(data);
+    } catch (err: any) {
+      setError(err.message || '단어장을 불러오는데 실패했습니다.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('정말 삭제하시겠습니까?')) {
-      removeFromVocabulary(id);
-      loadVocabulary();
+      try {
+        await apiService.deleteWord(id);
+        loadVocabulary();
+      } catch (err: any) {
+        alert(err.message || '삭제에 실패했습니다.');
+      }
     }
   };
 
@@ -87,7 +103,10 @@ export default function Vocabulary() {
     <Container>
       <h1>나의 단어장</h1>
       
-      {items.length === 0 ? (
+      {loading && <Loading />}
+      {error && <ErrorMessage message={error} onClose={() => setError('')} />}
+      
+      {!loading && items.length === 0 ? (
         <EmptyCard>
           <p>저장된 단어가 없습니다.</p>
           <p>예문 생성기에서 단어를 저장해보세요!</p>
@@ -105,9 +124,11 @@ export default function Vocabulary() {
                   삭제
                 </DeleteButton>
               </ItemHeader>
-              <Example>{item.example}</Example>
+              {item.examples.map((example, idx) => (
+                <Example key={idx}>{example}</Example>
+              ))}
               <DateText>
-                {new Date(item.date).toLocaleDateString('ko-KR')}
+                {new Date(item.createdAt).toLocaleDateString('ko-KR')}
               </DateText>
             </ItemCard>
           ))}

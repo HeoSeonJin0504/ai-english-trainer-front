@@ -64,16 +64,9 @@ const ToggleButton = styled(Button)`
   margin-top: 1rem;
 `;
 
-interface Problem {
-  korean: string;
-  answer: string;
-}
-
 export default function WritingProblem() {
   const [topic, setTopic] = useState('');
-  const [problems, setProblems] = useState<Problem[]>([]);
-  const [userAnswers, setUserAnswers] = useState<string[]>([]);
-  const [showAnswers, setShowAnswers] = useState(false);
+  const [questions, setQuestions] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -85,23 +78,15 @@ export default function WritingProblem() {
 
     setLoading(true);
     setError('');
-    setShowAnswers(false);
     
     try {
       const data = await apiService.generateWritingProblems(topic);
-      setProblems(data.problems);
-      setUserAnswers(new Array(data.problems.length).fill(''));
+      setQuestions(data.questions);
     } catch (err: any) {
       setError(err.message || '문제 생성에 실패했습니다.');
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleAnswerChange = (index: number, value: string) => {
-    const newAnswers = [...userAnswers];
-    newAnswers[index] = value;
-    setUserAnswers(newAnswers);
   };
 
   return (
@@ -123,31 +108,15 @@ export default function WritingProblem() {
       {loading && <Loading />}
       {error && <ErrorMessage message={error} onClose={() => setError('')} />}
 
-      {problems.length > 0 && (
+      {questions.length > 0 && (
         <Problems>
-          <h2>영작 문제</h2>
-          {problems.map((problem, index) => (
+          <h2>생성된 문제</h2>
+          {questions.map((question, index) => (
             <ProblemCard key={index}>
               <ProblemNumber>문제 {index + 1}</ProblemNumber>
-              <Korean>{problem.korean}</Korean>
-              <Input
-                value={userAnswers[index]}
-                onChange={(e) => handleAnswerChange(index, e.target.value)}
-                placeholder="영어로 작성하세요..."
-                disabled={showAnswers}
-              />
-              {showAnswers && (
-                <Answer>
-                  <strong>정답:</strong> {problem.answer}
-                </Answer>
-              )}
+              <Korean style={{ whiteSpace: 'pre-wrap' }}>{question}</Korean>
             </ProblemCard>
           ))}
-          <ToggleButton 
-            onClick={() => setShowAnswers(!showAnswers)}
-          >
-            {showAnswers ? '정답 숨기기' : '정답 확인'}
-          </ToggleButton>
         </Problems>
       )}
     </Container>
