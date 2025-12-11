@@ -114,6 +114,13 @@ const ExampleContent = styled.div`
     color: #666;
     font-size: 0.95rem;
   }
+
+  .highlight {
+    background: linear-gradient(180deg, transparent 50%, #fef08a 50%);
+    font-weight: 600;
+    color: #1e40af;
+    padding: 0 2px;
+  }
 `;
 
 const SaveButton = styled(Button)`
@@ -314,6 +321,22 @@ export default function ExampleGenerator() {
     }
   };
 
+  const highlightWord = (text: string, targetWord: string) => {
+    const regex = new RegExp(`(\\b${targetWord}\\w*)`, "gi");
+    const parts = text.split(regex);
+
+    return parts.map((part, index) => {
+      if (regex.test(part)) {
+        return (
+          <span key={index} className="highlight">
+            {part}
+          </span>
+        );
+      }
+      return part;
+    });
+  };
+
   return (
     <Container>
       <h1>예문 생성기</h1>
@@ -378,7 +401,9 @@ export default function ExampleGenerator() {
             {data.examples.map((example, index) => (
               <ExampleCard key={index}>
                 <ExampleContent>
-                  <p className="english">{example.english}</p>
+                  <p className="english">
+                    {highlightWord(example.english, data.word.original)}
+                  </p>
                   <p className="korean">{example.korean}</p>
                 </ExampleContent>
                 <SaveButton
