@@ -61,6 +61,64 @@ export interface Question {
   answer: string;
 }
 
+// 토익 모드 타입
+export interface ToeicPart5Question {
+  question: string;
+  options: {
+    A: string;
+    B: string;
+    C: string;
+    D: string;
+  };
+  answer: string;
+}
+
+export interface ToeicPart6Question {
+  passage: string;
+  question: string;
+  options: {
+    A: string;
+    B: string;
+    C: string;
+    D: string;
+  };
+  answer: string;
+}
+
+export interface ToeicPart7Question {
+  passage: string;
+  question: string;
+  options: {
+    A: string;
+    B: string;
+    C: string;
+    D: string;
+  };
+  answer: string;
+}
+
+export interface ToeicResponse {
+  mode: 'toeic';
+  questions: {
+    part5: ToeicPart5Question[];
+    part6: ToeicPart6Question[];
+    part7: ToeicPart7Question[];
+  };
+}
+
+// 영작 모드 타입
+export interface WritingQuestion {
+  type: 'situation' | 'translation' | 'fix' | 'short-answer';
+  question: string;
+  hint?: string;
+  answer: string;
+}
+
+export interface WritingResponse {
+  mode: 'writing';
+  questions: WritingQuestion[];
+}
+
 export const apiService = {
   async generateExamples(word: string): Promise<ExampleResponse> {
     try {
@@ -75,9 +133,9 @@ export const apiService = {
     }
   },
 
-  async generateWritingProblems(topic: string) {
+  async generateWritingProblems(topic: string, mode: 'toeic' | 'writing'): Promise<ToeicResponse | WritingResponse> {
     try {
-      const response = await apiClient.post('/generate/questions', { topic });
+      const response = await apiClient.post('/generate/questions', { topic, mode });
       return response.data;
     } catch (error: any) {
       throw new Error(error.response?.data?.error || '서버 오류가 발생했습니다.');

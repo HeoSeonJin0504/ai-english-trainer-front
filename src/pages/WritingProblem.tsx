@@ -5,10 +5,11 @@ import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { Loading } from '../components/Loading';
 import { ErrorMessage } from '../components/ErrorMessage';
-import { apiService, type Question } from '../services/api';
+import { apiService, type ToeicResponse, type WritingResponse } from '../services/api';
+import { gradeWriting, type GradingResult } from '../utils/grading';
 
 const Container = styled.div`
-  max-width: 800px;
+  max-width: 900px;
   margin: 0 auto;
   padding: 2rem;
 
@@ -19,43 +20,91 @@ const Container = styled.div`
   }
 `;
 
-const InputCard = styled(Card)`
-  display: flex;
-  gap: 1rem;
+const InputSection = styled(Card)`
   margin-bottom: 2rem;
 `;
 
-const Problems = styled.div`
-  margin-top: 2rem;
+const ModeSelector = styled.div`
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  justify-content: center;
+`;
 
-  h2 {
-    color: #1e40af;
-    margin-bottom: 1rem;
+const ModeButton = styled.button<{ active: boolean }>`
+  padding: 0.75rem 2rem;
+  border: 2px solid ${props => props.active ? '#3b82f6' : '#e5e7eb'};
+  background: ${props => props.active ? '#3b82f6' : 'white'};
+  color: ${props => props.active ? 'white' : '#666'};
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    border-color: #3b82f6;
+    background: ${props => props.active ? '#2563eb' : '#eff6ff'};
   }
 `;
 
-const ProblemCard = styled(Card)`
-  margin-bottom: 1.5rem;
+const InputRow = styled.div`
+  display: flex;
+  gap: 1rem;
 `;
 
-const ProblemNumber = styled.div`
+const Results = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+`;
+
+const PartSection = styled.div`
+  h2 {
+    color: #1e40af;
+    margin-bottom: 1rem;
+    font-size: 1.3rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    .badge {
+      background: #3b82f6;
+      color: white;
+      padding: 0.3rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+  }
+`;
+
+const QuestionCard = styled(Card)`
+  margin-bottom: 1rem;
+`;
+
+const QuestionNumber = styled.div`
   font-weight: bold;
   color: #3b82f6;
   margin-bottom: 0.5rem;
   font-size: 1.1rem;
 `;
 
-const QuestionText = styled.p`
-  font-size: 1.15rem;
-  margin-bottom: 0.5rem;
-  color: #1e40af;
-  font-weight: 500;
+const Passage = styled.div`
+  background: #f9fafb;
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  line-height: 1.8;
+  color: #333;
+  white-space: pre-wrap;
 `;
 
-const Translation = styled.p`
-  font-size: 0.95rem;
+const QuestionText = styled.p`
+  font-size: 1.05rem;
   margin-bottom: 1rem;
-  color: #666;
+  color: #1e40af;
+  font-weight: 500;
+  line-height: 1.6;
 `;
 
 const OptionsContainer = styled.div`
@@ -86,6 +135,7 @@ const OptionButton = styled.button<{ selected?: boolean; showAnswer?: boolean; i
   cursor: pointer;
   transition: all 0.2s;
   color: #333;
+  line-height: 1.6;
 
   &:hover {
     border-color: #3b82f6;
@@ -98,6 +148,51 @@ const OptionButton = styled.button<{ selected?: boolean; showAnswer?: boolean; i
   }
 `;
 
+const WritingQuestionCard = styled(Card)`
+  margin-bottom: 1rem;
+`;
+
+const TypeBadge = styled.span<{ type: string }>`
+  display: inline-block;
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  background: ${props => {
+    switch(props.type) {
+      case 'situation': return '#dbeafe';
+      case 'translation': return '#fef3c7';
+      case 'fix': return '#fee2e2';
+      case 'short-answer': return '#d1fae5';
+      default: return '#f3f4f6';
+    }
+  }};
+  color: ${props => {
+    switch(props.type) {
+      case 'situation': return '#1e40af';
+      case 'translation': return '#92400e';
+      case 'fix': return '#991b1b';
+      case 'short-answer': return '#065f46';
+      default: return '#374151';
+    }
+  }};
+`;
+
+const Hint = styled.div`
+  background: #fef3c7;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-top: 0.5rem;
+  color: #92400e;
+  font-size: 0.95rem;
+  
+  &::before {
+    content: '💡 힌트: ';
+    font-weight: 600;
+  }
+`;
+
 const Answer = styled.div`
   margin-top: 1rem;
   padding: 1rem;
@@ -105,6 +200,12 @@ const Answer = styled.div`
   border-radius: 8px;
   color: #065f46;
   border-left: 4px solid #10b981;
+  line-height: 1.6;
+
+  strong {
+    display: block;
+    margin-bottom: 0.5rem;
+  }
 `;
 
 const ToggleButton = styled(Button)`
@@ -112,13 +213,117 @@ const ToggleButton = styled(Button)`
   margin-top: 1rem;
 `;
 
+const WritingAnswerSection = styled.div`
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 2px dashed #e5e7eb;
+`;
+
+const AnswerLabel = styled.label`
+  display: block;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+`;
+
+const AnswerTextarea = styled.textarea`
+  width: 100%;
+  min-height: 100px;
+  padding: 0.75rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+  line-height: 1.6;
+  resize: vertical;
+  transition: border-color 0.2s;
+
+  &:focus {
+    outline: none;
+    border-color: #3b82f6;
+  }
+
+  &:disabled {
+    background: #f9fafb;
+    cursor: not-allowed;
+  }
+`;
+
+const GradeButton = styled(Button)`
+  margin-top: 0.75rem;
+  width: 100%;
+`;
+
+const GradingResultBox = styled.div<{ level: 'excellent' | 'good' | 'fair' | 'poor' }>`
+  margin-top: 1rem;
+  padding: 1.25rem;
+  border-radius: 8px;
+  border-left: 4px solid ${props => {
+    switch(props.level) {
+      case 'excellent': return '#10b981';
+      case 'good': return '#3b82f6';
+      case 'fair': return '#f59e0b';
+      case 'poor': return '#ef4444';
+    }
+  }};
+  background: ${props => {
+    switch(props.level) {
+      case 'excellent': return '#d1fae5';
+      case 'good': return '#dbeafe';
+      case 'fair': return '#fef3c7';
+      case 'poor': return '#fee2e2';
+    }
+  }};
+`;
+
+const ScoreDisplay = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+
+  .score {
+    font-size: 2rem;
+    font-weight: bold;
+    color: ${props => props.color || '#1e40af'};
+  }
+
+  .label {
+    font-size: 0.9rem;
+    color: #666;
+  }
+`;
+
+const FeedbackText = styled.p`
+  color: #374151;
+  line-height: 1.6;
+  margin-bottom: 0.5rem;
+`;
+
+const getTypeLabel = (type: string) => {
+  switch(type) {
+    case 'situation': return '상황 설명 영작';
+    case 'translation': return '한→영 번역';
+    case 'fix': return '문장 고치기';
+    case 'short-answer': return '짧은 답변';
+    default: return type;
+  }
+};
+
 export default function WritingProblem() {
+  const [mode, setMode] = useState<'toeic' | 'writing'>('toeic');
   const [topic, setTopic] = useState('');
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [selectedAnswers, setSelectedAnswers] = useState<{ [key: number]: string }>({});
+  const [toeicData, setToeicData] = useState<ToeicResponse | null>(null);
+  const [writingData, setWritingData] = useState<WritingResponse | null>(null);
+  const [selectedAnswers, setSelectedAnswers] = useState<{ [key: string]: string }>({});
   const [showAnswers, setShowAnswers] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  
+  // 영작 모드 전용 상태
+  const [writingAnswers, setWritingAnswers] = useState<{ [key: number]: string }>({});
+  const [gradingResults, setGradingResults] = useState<{ [key: number]: GradingResult }>({});
 
   const handleGenerate = async () => {
     if (!topic.trim()) {
@@ -130,10 +335,19 @@ export default function WritingProblem() {
     setError('');
     setShowAnswers(false);
     setSelectedAnswers({});
+    setToeicData(null);
+    setWritingData(null);
+    setWritingAnswers({});
+    setGradingResults({});
     
     try {
-      const data = await apiService.generateWritingProblems(topic);
-      setQuestions(data.questions);
+      const data = await apiService.generateWritingProblems(topic, mode);
+      
+      if (data.mode === 'toeic') {
+        setToeicData(data as ToeicResponse);
+      } else {
+        setWritingData(data as WritingResponse);
+      }
     } catch (err: any) {
       setError(err.message || '문제 생성에 실패했습니다.');
     } finally {
@@ -141,70 +355,261 @@ export default function WritingProblem() {
     }
   };
 
-  const handleOptionSelect = (questionIndex: number, option: string) => {
+  const handleOptionSelect = (questionKey: string, option: string) => {
     if (showAnswers) return;
     setSelectedAnswers(prev => ({
       ...prev,
-      [questionIndex]: option
+      [questionKey]: option
     }));
+  };
+
+  const handleWritingAnswerChange = (index: number, value: string) => {
+    setWritingAnswers(prev => ({
+      ...prev,
+      [index]: value
+    }));
+    // 답안이 변경되면 채점 결과 초기화
+    setGradingResults(prev => {
+      const newResults = { ...prev };
+      delete newResults[index];
+      return newResults;
+    });
+  };
+
+  const handleGradeAnswer = (index: number, modelAnswer: string) => {
+    const userAnswer = writingAnswers[index] || '';
+    const result = gradeWriting(userAnswer, modelAnswer);
+    
+    setGradingResults(prev => ({
+      ...prev,
+      [index]: result
+    }));
+  };
+
+  const getScoreColor = (level: 'excellent' | 'good' | 'fair' | 'poor') => {
+    switch(level) {
+      case 'excellent': return '#10b981';
+      case 'good': return '#3b82f6';
+      case 'fair': return '#f59e0b';
+      case 'poor': return '#ef4444';
+    }
   };
 
   return (
     <Container>
-      <h1>영어 퀴즈 생성기</h1>
+      <h1>영어 문제 생성기</h1>
       
-      <InputCard>
-        <Input
-          value={topic}
-          onChange={(e) => setTopic(e.target.value)}
-          placeholder="주제를 입력하세요 (예: 여행, 음식, 취미)"
-          onKeyPress={(e) => e.key === 'Enter' && handleGenerate()}
-        />
-        <Button onClick={handleGenerate} disabled={loading}>
-          문제 생성
-        </Button>
-      </InputCard>
+      <InputSection>
+        <ModeSelector>
+          <ModeButton 
+            active={mode === 'toeic'} 
+            onClick={() => setMode('toeic')}
+          >
+            토익 모드
+          </ModeButton>
+          <ModeButton 
+            active={mode === 'writing'} 
+            onClick={() => setMode('writing')}
+          >
+            영작 모드
+          </ModeButton>
+        </ModeSelector>
+        
+        <InputRow>
+          <Input
+            value={topic}
+            onChange={(e) => setTopic(e.target.value)}
+            placeholder={mode === 'toeic' ? '주제를 입력하세요 (예: 비즈니스, 여행)' : '주제를 입력하세요 (예: 일상 대화, 이메일 작성)'}
+            onKeyPress={(e) => e.key === 'Enter' && handleGenerate()}
+          />
+          <Button onClick={handleGenerate} disabled={loading}>
+            문제 생성
+          </Button>
+        </InputRow>
+      </InputSection>
 
       {loading && <Loading />}
       {error && <ErrorMessage message={error} onClose={() => setError('')} />}
 
-      {questions.length > 0 && (
-        <Problems>
-          <h2>생성된 문제</h2>
-          {questions.map((question, index) => (
-            <ProblemCard key={index}>
-              <ProblemNumber>문제 {index + 1}</ProblemNumber>
-              <QuestionText>{question.question}</QuestionText>
-              <Translation>{question.translation}</Translation>
-              
-              <OptionsContainer>
-                {Object.entries(question.options).map(([key, value]) => (
-                  <OptionButton
-                    key={key}
-                    selected={selectedAnswers[index] === key}
-                    showAnswer={showAnswers}
-                    isCorrect={key === question.answer}
-                    onClick={() => handleOptionSelect(index, key)}
-                    disabled={showAnswers}
-                  >
-                    <strong>{key})</strong> {value}
-                  </OptionButton>
-                ))}
-              </OptionsContainer>
+      {/* 토익 모드 결과 */}
+      {toeicData && (
+        <Results>
+          {/* Part 5 */}
+          {toeicData.questions.part5.length > 0 && (
+            <PartSection>
+              <h2>
+                <span className="badge">Part 5</span>
+                문법 · 어휘
+              </h2>
+              {toeicData.questions.part5.map((q, idx) => (
+                <QuestionCard key={`p5-${idx}`}>
+                  <QuestionNumber>문제 {idx + 1}</QuestionNumber>
+                  <QuestionText>{q.question}</QuestionText>
+                  <OptionsContainer>
+                    {Object.entries(q.options).map(([key, value]) => (
+                      <OptionButton
+                        key={key}
+                        selected={selectedAnswers[`p5-${idx}`] === key}
+                        showAnswer={showAnswers}
+                        isCorrect={key === q.answer}
+                        onClick={() => handleOptionSelect(`p5-${idx}`, key)}
+                        disabled={showAnswers}
+                      >
+                        <strong>{key})</strong> {value}
+                      </OptionButton>
+                    ))}
+                  </OptionsContainer>
+                  {showAnswers && (
+                    <Answer>
+                      <strong>정답: {q.answer})</strong>
+                      {q.options[q.answer as keyof typeof q.options]}
+                    </Answer>
+                  )}
+                </QuestionCard>
+              ))}
+            </PartSection>
+          )}
 
-              {showAnswers && (
-                <Answer>
-                  <strong>정답:</strong> {question.answer}) {question.options[question.answer as keyof typeof question.options]}
-                </Answer>
-              )}
-            </ProblemCard>
-          ))}
-          <ToggleButton 
-            onClick={() => setShowAnswers(!showAnswers)}
-          >
+          {/* Part 6 */}
+          {toeicData.questions.part6.length > 0 && (
+            <PartSection>
+              <h2>
+                <span className="badge">Part 6</span>
+                문장 위치
+              </h2>
+              {toeicData.questions.part6.map((q, idx) => (
+                <QuestionCard key={`p6-${idx}`}>
+                  <QuestionNumber>문제 {idx + 1}</QuestionNumber>
+                  <Passage>{q.passage}</Passage>
+                  <QuestionText>{q.question}</QuestionText>
+                  <OptionsContainer>
+                    {Object.entries(q.options).map(([key, value]) => (
+                      <OptionButton
+                        key={key}
+                        selected={selectedAnswers[`p6-${idx}`] === key}
+                        showAnswer={showAnswers}
+                        isCorrect={key === q.answer}
+                        onClick={() => handleOptionSelect(`p6-${idx}`, key)}
+                        disabled={showAnswers}
+                      >
+                        <strong>{key})</strong> {value}
+                      </OptionButton>
+                    ))}
+                  </OptionsContainer>
+                  {showAnswers && (
+                    <Answer>
+                      <strong>정답: {q.answer})</strong>
+                      {q.options[q.answer as keyof typeof q.options]}
+                    </Answer>
+                  )}
+                </QuestionCard>
+              ))}
+            </PartSection>
+          )}
+
+          {/* Part 7 */}
+          {toeicData.questions.part7.length > 0 && (
+            <PartSection>
+              <h2>
+                <span className="badge">Part 7</span>
+                독해
+              </h2>
+              {toeicData.questions.part7.map((q, idx) => (
+                <QuestionCard key={`p7-${idx}`}>
+                  <QuestionNumber>문제 {idx + 1}</QuestionNumber>
+                  <Passage>{q.passage}</Passage>
+                  <QuestionText>{q.question}</QuestionText>
+                  <OptionsContainer>
+                    {Object.entries(q.options).map(([key, value]) => (
+                      <OptionButton
+                        key={key}
+                        selected={selectedAnswers[`p7-${idx}`] === key}
+                        showAnswer={showAnswers}
+                        isCorrect={key === q.answer}
+                        onClick={() => handleOptionSelect(`p7-${idx}`, key)}
+                        disabled={showAnswers}
+                      >
+                        <strong>{key})</strong> {value}
+                      </OptionButton>
+                    ))}
+                  </OptionsContainer>
+                  {showAnswers && (
+                    <Answer>
+                      <strong>정답: {q.answer})</strong>
+                      {q.options[q.answer as keyof typeof q.options]}
+                    </Answer>
+                  )}
+                </QuestionCard>
+              ))}
+            </PartSection>
+          )}
+
+          <ToggleButton onClick={() => setShowAnswers(!showAnswers)}>
             {showAnswers ? '정답 숨기기' : '정답 확인'}
           </ToggleButton>
-        </Problems>
+        </Results>
+      )}
+
+      {/* 영작 모드 결과 */}
+      {writingData && (
+        <Results>
+          <PartSection>
+            <h2>영작 연습 문제</h2>
+            {writingData.questions.map((q, idx) => (
+              <WritingQuestionCard key={idx}>
+                <TypeBadge type={q.type}>{getTypeLabel(q.type)}</TypeBadge>
+                <QuestionNumber>문제 {idx + 1}</QuestionNumber>
+                <QuestionText>{q.question}</QuestionText>
+                
+                {q.hint && <Hint>{q.hint}</Hint>}
+                
+                {/* 답안 입력 섹션 */}
+                <WritingAnswerSection>
+                  <AnswerLabel>내 답안</AnswerLabel>
+                  <AnswerTextarea
+                    value={writingAnswers[idx] || ''}
+                    onChange={(e) => handleWritingAnswerChange(idx, e.target.value)}
+                    placeholder="영어로 답안을 작성하세요..."
+                    disabled={showAnswers}
+                  />
+                  
+                  {!showAnswers && (
+                    <GradeButton
+                      onClick={() => handleGradeAnswer(idx, q.answer)}
+                      variant="secondary"
+                      disabled={!writingAnswers[idx]?.trim()}
+                    >
+                      채점하기
+                    </GradeButton>
+                  )}
+
+                  {/* 채점 결과 */}
+                  {gradingResults[idx] && !showAnswers && (
+                    <GradingResultBox level={gradingResults[idx].level}>
+                      <ScoreDisplay color={getScoreColor(gradingResults[idx].level)}>
+                        <div className="score">{gradingResults[idx].score}점</div>
+                        <div className="label">/ 100점</div>
+                      </ScoreDisplay>
+                      <FeedbackText>{gradingResults[idx].feedback}</FeedbackText>
+                    </GradingResultBox>
+                  )}
+                </WritingAnswerSection>
+
+                {/* 모범 답안 */}
+                {showAnswers && (
+                  <Answer>
+                    <strong>모범 답안:</strong>
+                    {q.answer}
+                  </Answer>
+                )}
+              </WritingQuestionCard>
+            ))}
+          </PartSection>
+
+          <ToggleButton onClick={() => setShowAnswers(!showAnswers)}>
+            {showAnswers ? '모범 답안 숨기기' : '모범 답안 확인'}
+          </ToggleButton>
+        </Results>
       )}
     </Container>
   );

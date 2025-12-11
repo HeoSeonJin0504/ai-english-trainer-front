@@ -61,7 +61,7 @@ export function Layout({ children }: LayoutProps) {
   const navItems = [
     { path: '/', label: '홈' },
     { path: '/example', label: '예문 생성' },
-    { path: '/writing', label: '영작 문제' },
+    { path: '/writing', label: '영어 문제' },
     { path: '/vocabulary', label: '단어장' }
   ];
 
