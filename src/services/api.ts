@@ -16,8 +16,48 @@ export interface Word {
   createdAt: string;
 }
 
+export interface Example {
+  english: string;
+  korean: string;
+}
+
+export interface WordInfo {
+  original: string;
+  partOfSpeech: string;
+  meaning: string;
+}
+
+export interface RelatedWord {
+  word: string;
+  partOfSpeech: string;
+  meaning: string;
+}
+
+export interface RelatedWords {
+  synonym: RelatedWord;
+  antonym: RelatedWord | null;
+}
+
+export interface ExampleResponse {
+  word: WordInfo;
+  examples: Example[];
+  relatedWords: RelatedWords;
+}
+
+export interface Question {
+  question: string;
+  translation: string;
+  options: {
+    A: string;
+    B: string;
+    C: string;
+    D: string;
+  };
+  answer: string;
+}
+
 export const apiService = {
-  async generateExamples(word: string) {
+  async generateExamples(word: string): Promise<ExampleResponse> {
     try {
       const response = await apiClient.post('/generate/examples', { word });
       return response.data;
