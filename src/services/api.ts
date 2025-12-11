@@ -19,12 +19,17 @@ export interface Word {
 export interface Example {
   english: string;
   korean: string;
+  meaningIndex: number;
+}
+
+export interface Meaning {
+  partOfSpeech: string;
+  meaning: string;
 }
 
 export interface WordInfo {
   original: string;
-  partOfSpeech: string;
-  meaning: string;
+  meanings: Meaning[];
 }
 
 export interface RelatedWord {

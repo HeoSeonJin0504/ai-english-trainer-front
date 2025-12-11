@@ -60,17 +60,36 @@ const WordInfoCard = styled(Card)`
 
 const WordTitle = styled.h3`
   font-size: 2.5rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: 1rem;
   font-weight: bold;
   color: #1e40af;
 `;
 
-const WordMeta = styled.div`
+const MeaningsContainer = styled.div`
   display: flex;
-  gap: 1.5rem;
+  flex-direction: column;
+  gap: 0.8rem;
+`;
+
+const MeaningItem = styled.div`
+  display: flex;
   align-items: center;
-  font-size: 1.1rem;
-  color: #475569;
+  gap: 1rem;
+  padding: 0.5rem 0;
+
+  .number {
+    background: #3b82f6;
+    color: white;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+  }
 
   .badge {
     background: #eff6ff;
@@ -79,6 +98,14 @@ const WordMeta = styled.div`
     border-radius: 20px;
     font-weight: 500;
     border: 1px solid #bfdbfe;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+  }
+
+  .meaning-text {
+    color: #475569;
+    font-size: 1.05rem;
+    flex: 1;
   }
 `;
 
@@ -98,6 +125,21 @@ const ExampleCard = styled(Card)`
 
 const ExampleContent = styled.div`
   flex: 1;
+
+  .meaning-badge {
+    display: inline-block;
+    background: #3b82f6;
+    color: white;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 22px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    margin-right: 0.5rem;
+    vertical-align: middle;
+  }
 
   p {
     line-height: 1.6;
@@ -388,10 +430,15 @@ export default function ExampleGenerator() {
           <Section>
             <WordInfoCard>
               <WordTitle>{data.word.original}</WordTitle>
-              <WordMeta>
-                <span className="badge">{data.word.partOfSpeech}</span>
-                <span>{data.word.meaning}</span>
-              </WordMeta>
+              <MeaningsContainer>
+                {data.word.meanings.map((meaning, index) => (
+                  <MeaningItem key={index}>
+                    <span className="number">{index + 1}</span>
+                    <span className="badge">{meaning.partOfSpeech}</span>
+                    <span className="meaning-text">{meaning.meaning}</span>
+                  </MeaningItem>
+                ))}
+              </MeaningsContainer>
             </WordInfoCard>
           </Section>
 
