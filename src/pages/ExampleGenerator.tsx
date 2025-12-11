@@ -402,7 +402,7 @@ export default function ExampleGenerator() {
               <RelatedWordCard type="synonym">
                 <RelatedWordHeader>
                   <span>💚</span>
-                  <span>유의어 (Synonym)</span>
+                  <span>유의어</span>
                 </RelatedWordHeader>
                 <RelatedWordContent>
                   <div className="word">{data.relatedWords.synonym.word}</div>
@@ -420,7 +420,7 @@ export default function ExampleGenerator() {
                 <RelatedWordCard type="antonym">
                   <RelatedWordHeader>
                     <span>❤️</span>
-                    <span>반의어 (Antonym)</span>
+                    <span>반의어</span>
                   </RelatedWordHeader>
                   <RelatedWordContent>
                     <div className="word">{data.relatedWords.antonym.word}</div>
