@@ -114,38 +114,63 @@ const OptionsContainer = styled.div`
   margin-bottom: 1rem;
 `;
 
-const OptionButton = styled.button<{ selected?: boolean; showAnswer?: boolean; isCorrect?: boolean }>`
+const OptionButton = styled.button<{ selected?: boolean; showAnswer?: boolean; isCorrect?: boolean; isWrong?: boolean }>`
   padding: 0.75rem 1rem;
   text-align: left;
-  border: 2px solid ${props => 
-    props.showAnswer && props.isCorrect 
-      ? '#10b981' 
-      : props.selected 
-        ? '#3b82f6' 
-        : '#e5e7eb'
-  };
-  background: ${props => 
-    props.showAnswer && props.isCorrect 
-      ? '#d1fae5' 
-      : props.selected 
-        ? '#eff6ff' 
-        : 'white'
-  };
+  border: 2px solid ${props => {
+    if (props.showAnswer && props.isCorrect) return '#10b981';
+    if (props.showAnswer && props.isWrong) return '#ef4444';
+    if (props.selected) return '#3b82f6';
+    return '#e5e7eb';
+  }};
+  background: ${props => {
+    if (props.showAnswer && props.isCorrect) return '#d1fae5';
+    if (props.showAnswer && props.isWrong) return '#fee2e2';
+    if (props.selected) return '#eff6ff';
+    return 'white';
+  }};
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s;
   color: #333;
   line-height: 1.6;
+  position: relative;
 
   &:hover {
-    border-color: #3b82f6;
-    background: #eff6ff;
+    border-color: ${props => props.showAnswer ? '' : '#3b82f6'};
+    background: ${props => props.showAnswer ? '' : '#eff6ff'};
   }
 
   &:disabled {
     cursor: not-allowed;
     opacity: 0.7;
   }
+
+  ${props => props.showAnswer && props.isCorrect && `
+    &::after {
+      content: '✓ 정답';
+      position: absolute;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #10b981;
+      font-weight: bold;
+      font-size: 0.9rem;
+    }
+  `}
+
+  ${props => props.showAnswer && props.isWrong && `
+    &::after {
+      content: '✗ 오답';
+      position: absolute;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #ef4444;
+      font-weight: bold;
+      font-size: 0.9rem;
+    }
+  `}
 `;
 
 const WritingQuestionCard = styled(Card)`
@@ -195,16 +220,18 @@ const Hint = styled.div`
 
 const Answer = styled.div`
   margin-top: 1rem;
-  padding: 1rem;
-  background: #d1fae5;
+  padding: 1.5rem;
+  background: white;
   border-radius: 8px;
-  color: #065f46;
-  border-left: 4px solid #10b981;
+  border: 2px solid #10b981;
   line-height: 1.6;
+  color: #333;
 
   strong {
     display: block;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
+    color: #10b981;
+    font-size: 1.05rem;
   }
 `;
 
@@ -277,30 +304,6 @@ const GradingResultBox = styled.div<{ level: 'excellent' | 'good' | 'fair' | 'po
   }};
 `;
 
-const ScoreDisplay = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 0.75rem;
-
-  .score {
-    font-size: 2rem;
-    font-weight: bold;
-    color: ${props => props.color || '#1e40af'};
-  }
-
-  .label {
-    font-size: 0.9rem;
-    color: #666;
-  }
-`;
-
-const FeedbackText = styled.p`
-  color: #374151;
-  line-height: 1.6;
-  margin-bottom: 0.5rem;
-`;
-
 const getTypeLabel = (type: string) => {
   switch(type) {
     case 'situation': return '상황 설명 영작';
@@ -335,17 +338,19 @@ const InsertSentence = styled.div`
 `;
 
 const Explanation = styled.div`
-  margin-top: 0.75rem;
-  padding: 0.75rem 1rem;
-  background: #f0f9ff;
+  margin-top: 1rem;
+  padding: 1rem;
+  background: white;
+  border: 2px solid #3b82f6;
   border-radius: 6px;
-  color: #0c4a6e;
+  color: #1e40af;
   font-size: 0.9rem;
   line-height: 1.5;
   
   &::before {
     content: '💡 해설: ';
     font-weight: 600;
+    color: #3b82f6;
   }
 `;
 
@@ -489,7 +494,8 @@ export default function WritingProblem() {
                         key={key}
                         selected={selectedAnswers[`p5-${idx}`] === key}
                         showAnswer={showAnswers}
-                        isCorrect={key === q.answer}
+                        isCorrect={showAnswers && key === q.answer}
+                        isWrong={showAnswers && selectedAnswers[`p5-${idx}`] === key && key !== q.answer}
                         onClick={() => handleOptionSelect(`p5-${idx}`, key)}
                         disabled={showAnswers}
                       >
@@ -498,11 +504,13 @@ export default function WritingProblem() {
                     ))}
                   </OptionsContainer>
                   {showAnswers && (
-                    <Answer>
-                      <strong>정답: {q.answer})</strong>
-                      {q.options[q.answer as keyof typeof q.options]}
+                    <>
+                      <Answer>
+                        <strong>✓ 정답</strong>
+                        {q.answer}) {q.options[q.answer as keyof typeof q.options]}
+                      </Answer>
                       <Explanation>{q.explanation}</Explanation>
-                    </Answer>
+                    </>
                   )}
                 </QuestionCard>
               ))}
@@ -533,7 +541,8 @@ export default function WritingProblem() {
                         key={key}
                         selected={selectedAnswers[`p6-${idx}`] === key}
                         showAnswer={showAnswers}
-                        isCorrect={key === q.answer}
+                        isCorrect={showAnswers && key === q.answer}
+                        isWrong={showAnswers && selectedAnswers[`p6-${idx}`] === key && key !== q.answer}
                         onClick={() => handleOptionSelect(`p6-${idx}`, key)}
                         disabled={showAnswers}
                       >
@@ -542,11 +551,13 @@ export default function WritingProblem() {
                     ))}
                   </OptionsContainer>
                   {showAnswers && (
-                    <Answer>
-                      <strong>정답: {q.answer})</strong>
-                      {q.options[q.answer as keyof typeof q.options]}
+                    <>
+                      <Answer>
+                        <strong>✓ 정답</strong>
+                        {q.answer}) {q.options[q.answer as keyof typeof q.options]}
+                      </Answer>
                       <Explanation>{q.explanation}</Explanation>
-                    </Answer>
+                    </>
                   )}
                 </QuestionCard>
               ))}
@@ -571,7 +582,8 @@ export default function WritingProblem() {
                         key={key}
                         selected={selectedAnswers[`p7-${idx}`] === key}
                         showAnswer={showAnswers}
-                        isCorrect={key === q.answer}
+                        isCorrect={showAnswers && key === q.answer}
+                        isWrong={showAnswers && selectedAnswers[`p7-${idx}`] === key && key !== q.answer}
                         onClick={() => handleOptionSelect(`p7-${idx}`, key)}
                         disabled={showAnswers}
                       >
@@ -580,11 +592,13 @@ export default function WritingProblem() {
                     ))}
                   </OptionsContainer>
                   {showAnswers && (
-                    <Answer>
-                      <strong>정답: {q.answer})</strong>
-                      {q.options[q.answer as keyof typeof q.options]}
+                    <>
+                      <Answer>
+                        <strong>✓ 정답</strong>
+                        {q.answer}) {q.options[q.answer as keyof typeof q.options]}
+                      </Answer>
                       <Explanation>{q.explanation}</Explanation>
-                    </Answer>
+                    </>
                   )}
                 </QuestionCard>
               ))}
@@ -645,7 +659,7 @@ export default function WritingProblem() {
                 {/* 모범 답안 */}
                 {showAnswers && (
                   <Answer>
-                    <strong>모범 답안:</strong>
+                    <strong>✓ 모범 답안</strong>
                     {q.answer}
                   </Answer>
                 )}
