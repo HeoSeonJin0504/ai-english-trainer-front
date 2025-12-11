@@ -64,7 +64,7 @@ export default function Home() {
   const features = [
     {
       title: '예문 생성기',
-      description: '단어를 입력하면 AI가 예문을 생성해줍니다.',
+      description: '단어를 입력하면 단어의 예문을 생성해줍니다.',
       path: '/example',
       icon: '📝'
     },

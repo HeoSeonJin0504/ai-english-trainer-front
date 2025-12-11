@@ -62,6 +62,10 @@ export const apiService = {
       const response = await apiClient.post('/generate/examples', { word });
       return response.data;
     } catch (error: any) {
+      // 400 에러이고 Invalid word 메시지가 있는 경우
+      if (error.response?.status === 400 && error.response?.data?.error === 'Invalid word') {
+        throw new Error(error.response.data.message || '유효한 영어 단어가 아닙니다.');
+      }
       throw new Error(error.response?.data?.error || '서버 오류가 발생했습니다.');
     }
   },

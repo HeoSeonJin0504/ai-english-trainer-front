@@ -177,28 +177,123 @@ const RelatedWordContent = styled.div`
   }
 `;
 
+const InvalidWordMessage = styled.div`
+  background: #fef2f2;
+  border: 2px solid #fca5a5;
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
+  color: #991b1b;
+
+  .icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+  }
+
+  h3 {
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+    color: #dc2626;
+  }
+
+  p {
+    color: #7f1d1d;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+  }
+
+  .suggestions {
+    font-size: 0.9rem;
+    color: #991b1b;
+    margin-top: 1rem;
+    
+    strong {
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: center;
+      
+      li {
+        background: white;
+        padding: 0.3rem 0.8rem;
+        border-radius: 8px;
+        border: 1px solid #fca5a5;
+      }
+    }
+  }
+`;
+
 export default function ExampleGenerator() {
   const [word, setWord] = useState('');
   const [data, setData] = useState<ExampleResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [invalidWord, setInvalidWord] = useState(false);
   const [saveLoading, setSaveLoading] = useState<number | null>(null);
 
+  // 영어 문자만 허용하는 함수
+  const isEnglishOnly = (text: string): boolean => {
+    return /^[a-zA-Z\s]*$/.test(text);
+  };
+
+  const handleWordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    
+    // 영어와 공백만 허용
+    if (isEnglishOnly(newValue) || newValue === '') {
+      setWord(newValue);
+      setError('');
+      setInvalidWord(false);
+    } else {
+      setError('영어만 입력 가능합니다.');
+    }
+  };
+
   const handleGenerate = async () => {
-    if (!word.trim()) {
+    const trimmedWord = word.trim();
+    
+    if (!trimmedWord) {
       setError('단어를 입력해주세요.');
+      return;
+    }
+
+    // 영어 검증
+    if (!isEnglishOnly(trimmedWord)) {
+      setError('영어만 입력 가능합니다.');
+      return;
+    }
+
+    // 공백 포함 여부 확인
+    if (trimmedWord.includes(' ')) {
+      setError('단어는 공백 없이 입력해주세요.');
       return;
     }
 
     setLoading(true);
     setError('');
     setData(null);
+    setInvalidWord(false);
     
     try {
-      const response = await apiService.generateExamples(word);
+      const response = await apiService.generateExamples(trimmedWord);
       setData(response);
     } catch (err: any) {
-      setError(err.message || '예문 생성에 실패했습니다.');
+      const errorMessage = err.message || '예문 생성에 실패했습니다.';
+      
+      // 유효하지 않은 단어인 경우
+      if (errorMessage.includes('유효한 영어 단어가 아닙니다')) {
+        setInvalidWord(true);
+        setError(errorMessage);
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setLoading(false);
     }
@@ -225,8 +320,8 @@ export default function ExampleGenerator() {
       <InputCard>
         <Input
           value={word}
-          onChange={(e) => setWord(e.target.value)}
-          placeholder="단어를 입력하세요 (예: happy)"
+          onChange={handleWordChange}
+          placeholder="영어 단어를 입력하세요 (예: happy)"
           onKeyPress={(e) => e.key === 'Enter' && handleGenerate()}
         />
         <Button onClick={handleGenerate} disabled={loading}>
@@ -235,7 +330,31 @@ export default function ExampleGenerator() {
       </InputCard>
 
       {loading && <Loading />}
-      {error && <ErrorMessage message={error} onClose={() => setError('')} />}
+      
+      {error && !invalidWord && (
+        <ErrorMessage message={error} onClose={() => setError('')} />
+      )}
+
+      {invalidWord && (
+        <InvalidWordMessage>
+          <div className="icon">❌</div>
+          <h3>유효하지 않은 단어입니다</h3>
+          <p>
+            '<strong>{word}</strong>'는 올바른 영어 단어가 아니거나 사전에 없는 단어입니다.<br />
+            철자를 확인하고 다시 시도해주세요.
+          </p>
+          <div className="suggestions">
+            <strong>💡 이런 단어들을 시도해보세요:</strong>
+            <ul>
+              <li>happy</li>
+              <li>computer</li>
+              <li>beautiful</li>
+              <li>learn</li>
+              <li>important</li>
+            </ul>
+          </div>
+        </InvalidWordMessage>
+      )}
 
       {data && (
         <Results>
