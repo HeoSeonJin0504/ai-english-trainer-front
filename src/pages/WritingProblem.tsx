@@ -311,6 +311,44 @@ const getTypeLabel = (type: string) => {
   }
 };
 
+const InsertSentence = styled.div`
+  background: #fef3c7;
+  padding: 1rem 1.25rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  border-left: 4px solid #f59e0b;
+  
+  .label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #92400e;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+  }
+
+  .sentence {
+    color: #451a03;
+    font-size: 1.05rem;
+    line-height: 1.6;
+    font-weight: 500;
+  }
+`;
+
+const Explanation = styled.div`
+  margin-top: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: #f0f9ff;
+  border-radius: 6px;
+  color: #0c4a6e;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  
+  &::before {
+    content: '💡 해설: ';
+    font-weight: 600;
+  }
+`;
+
 export default function WritingProblem() {
   const [mode, setMode] = useState<'toeic' | 'writing'>('toeic');
   const [topic, setTopic] = useState('');
@@ -463,6 +501,7 @@ export default function WritingProblem() {
                     <Answer>
                       <strong>정답: {q.answer})</strong>
                       {q.options[q.answer as keyof typeof q.options]}
+                      <Explanation>{q.explanation}</Explanation>
                     </Answer>
                   )}
                 </QuestionCard>
@@ -475,12 +514,18 @@ export default function WritingProblem() {
             <PartSection>
               <h2>
                 <span className="badge">Part 6</span>
-                문장 위치
+                문장 삽입
               </h2>
               {toeicData.questions.part6.map((q, idx) => (
                 <QuestionCard key={`p6-${idx}`}>
                   <QuestionNumber>문제 {idx + 1}</QuestionNumber>
                   <Passage>{q.passage}</Passage>
+                  
+                  <InsertSentence>
+                    <div className="label">삽입할 문장</div>
+                    <div className="sentence">{q.insertSentence}</div>
+                  </InsertSentence>
+                  
                   <QuestionText>{q.question}</QuestionText>
                   <OptionsContainer>
                     {Object.entries(q.options).map(([key, value]) => (
@@ -500,6 +545,7 @@ export default function WritingProblem() {
                     <Answer>
                       <strong>정답: {q.answer})</strong>
                       {q.options[q.answer as keyof typeof q.options]}
+                      <Explanation>{q.explanation}</Explanation>
                     </Answer>
                   )}
                 </QuestionCard>
@@ -537,6 +583,7 @@ export default function WritingProblem() {
                     <Answer>
                       <strong>정답: {q.answer})</strong>
                       {q.options[q.answer as keyof typeof q.options]}
+                      <Explanation>{q.explanation}</Explanation>
                     </Answer>
                   )}
                 </QuestionCard>

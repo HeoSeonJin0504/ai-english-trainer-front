@@ -71,10 +71,12 @@ export interface ToeicPart5Question {
     D: string;
   };
   answer: string;
+  explanation: string;
 }
 
 export interface ToeicPart6Question {
   passage: string;
+  insertSentence: string;
   question: string;
   options: {
     A: string;
@@ -83,6 +85,7 @@ export interface ToeicPart6Question {
     D: string;
   };
   answer: string;
+  explanation: string;
 }
 
 export interface ToeicPart7Question {
@@ -95,6 +98,7 @@ export interface ToeicPart7Question {
     D: string;
   };
   answer: string;
+  explanation: string;
 }
 
 export interface ToeicResponse {
