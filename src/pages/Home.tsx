@@ -69,8 +69,8 @@ export default function Home() {
       icon: '📝'
     },
     {
-      title: '영작 문제',
-      description: '주제를 입력하면 영작 문제를 생성합니다.',
+      title: '영어 문제',
+      description: '토익 문제나 영작 문제를 생성합니다.',
       path: '/writing',
       icon: '✍️'
     },
