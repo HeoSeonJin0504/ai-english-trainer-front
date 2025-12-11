@@ -1,11 +1,11 @@
-import { useState } from 'react';
-import styled from 'styled-components';
-import { Input } from '../components/Input';
-import { Button } from '../components/Button';
-import { Card } from '../components/Card';
-import { Loading } from '../components/Loading';
-import { ErrorMessage } from '../components/ErrorMessage';
-import { apiService, type ExampleResponse } from '../services/api';
+import { useState } from "react";
+import styled from "styled-components";
+import { Input } from "../components/Input";
+import { Button } from "../components/Button";
+import { Card } from "../components/Card";
+import { Loading } from "../components/Loading";
+import { ErrorMessage } from "../components/ErrorMessage";
+import { apiService, type ExampleResponse } from "../services/api";
 
 const Container = styled.div`
   max-width: 900px;
@@ -42,7 +42,7 @@ const Section = styled.div`
     gap: 0.5rem;
 
     &::before {
-      content: '';
+      content: "";
       display: inline-block;
       width: 4px;
       height: 1.3rem;
@@ -127,9 +127,10 @@ const RelatedWordsGrid = styled.div`
   gap: 1rem;
 `;
 
-const RelatedWordCard = styled(Card)<{ type: 'synonym' | 'antonym' }>`
-  border-left: 4px solid ${props => props.type === 'synonym' ? '#10b981' : '#ef4444'};
-  background: ${props => props.type === 'synonym' ? '#f0fdf4' : '#fef2f2'};
+const RelatedWordCard = styled(Card)<{ type: "synonym" | "antonym" }>`
+  border-left: 4px solid
+    ${(props) => (props.type === "synonym" ? "#10b981" : "#ef4444")};
+  background: ${(props) => (props.type === "synonym" ? "#f0fdf4" : "#fef2f2")};
 
   &.empty {
     opacity: 0.6;
@@ -206,7 +207,7 @@ const InvalidWordMessage = styled.div`
     font-size: 0.9rem;
     color: #991b1b;
     margin-top: 1rem;
-    
+
     strong {
       display: block;
       margin-bottom: 0.5rem;
@@ -219,7 +220,7 @@ const InvalidWordMessage = styled.div`
       flex-wrap: wrap;
       gap: 0.5rem;
       justify-content: center;
-      
+
       li {
         background: white;
         padding: 0.3rem 0.8rem;
@@ -231,10 +232,10 @@ const InvalidWordMessage = styled.div`
 `;
 
 export default function ExampleGenerator() {
-  const [word, setWord] = useState('');
+  const [word, setWord] = useState("");
   const [data, setData] = useState<ExampleResponse | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [invalidWord, setInvalidWord] = useState(false);
   const [saveLoading, setSaveLoading] = useState<number | null>(null);
 
@@ -245,50 +246,50 @@ export default function ExampleGenerator() {
 
   const handleWordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
-    
+
     // 영어와 공백만 허용
-    if (isEnglishOnly(newValue) || newValue === '') {
+    if (isEnglishOnly(newValue) || newValue === "") {
       setWord(newValue);
-      setError('');
+      setError("");
       setInvalidWord(false);
     } else {
-      setError('영어만 입력 가능합니다.');
+      setError("영어만 입력 가능합니다.");
     }
   };
 
   const handleGenerate = async () => {
     const trimmedWord = word.trim();
-    
+
     if (!trimmedWord) {
-      setError('단어를 입력해주세요.');
+      setError("단어를 입력해주세요.");
       return;
     }
 
     // 영어 검증
     if (!isEnglishOnly(trimmedWord)) {
-      setError('영어만 입력 가능합니다.');
+      setError("영어만 입력 가능합니다.");
       return;
     }
 
     // 공백 포함 여부 확인
-    if (trimmedWord.includes(' ')) {
-      setError('단어는 공백 없이 입력해주세요.');
+    if (trimmedWord.includes(" ")) {
+      setError("단어는 공백 없이 입력해주세요.");
       return;
     }
 
     setLoading(true);
-    setError('');
+    setError("");
     setData(null);
     setInvalidWord(false);
-    
+
     try {
       const response = await apiService.generateExamples(trimmedWord);
       setData(response);
     } catch (err: any) {
-      const errorMessage = err.message || '예문 생성에 실패했습니다.';
-      
+      const errorMessage = err.message || "예문 생성에 실패했습니다.";
+
       // 유효하지 않은 단어인 경우
-      if (errorMessage.includes('유효한 영어 단어가 아닙니다')) {
+      if (errorMessage.includes("유효한 영어 단어가 아닙니다")) {
         setInvalidWord(true);
         setError(errorMessage);
       } else {
@@ -301,13 +302,13 @@ export default function ExampleGenerator() {
 
   const handleSave = async (example: string, index: number) => {
     if (!data) return;
-    
+
     setSaveLoading(index);
     try {
       await apiService.addWord(data.word.original, [example]);
-      alert('단어장에 저장되었습니다!');
+      alert("단어장에 저장되었습니다!");
     } catch (err: any) {
-      alert(err.message || '저장에 실패했습니다.');
+      alert(err.message || "저장에 실패했습니다.");
     } finally {
       setSaveLoading(null);
     }
@@ -316,13 +317,13 @@ export default function ExampleGenerator() {
   return (
     <Container>
       <h1>예문 생성기</h1>
-      
+
       <InputCard>
         <Input
           value={word}
           onChange={handleWordChange}
           placeholder="영어 단어를 입력하세요 (예: happy)"
-          onKeyPress={(e) => e.key === 'Enter' && handleGenerate()}
+          onKeyPress={(e) => e.key === "Enter" && handleGenerate()}
         />
         <Button onClick={handleGenerate} disabled={loading}>
           생성하기
@@ -330,9 +331,9 @@ export default function ExampleGenerator() {
       </InputCard>
 
       {loading && <Loading />}
-      
+
       {error && !invalidWord && (
-        <ErrorMessage message={error} onClose={() => setError('')} />
+        <ErrorMessage message={error} onClose={() => setError("")} />
       )}
 
       {invalidWord && (
@@ -340,7 +341,9 @@ export default function ExampleGenerator() {
           <div className="icon">❌</div>
           <h3>유효하지 않은 단어입니다</h3>
           <p>
-            '<strong>{word}</strong>'는 올바른 영어 단어가 아니거나 사전에 없는 단어입니다.<br />
+            '<strong>{word}</strong>'는 올바른 영어 단어가 아니거나 사전에 없는
+            단어입니다.
+            <br />
             철자를 확인하고 다시 시도해주세요.
           </p>
           <div className="suggestions">
@@ -378,12 +381,14 @@ export default function ExampleGenerator() {
                   <p className="english">{example.english}</p>
                   <p className="korean">{example.korean}</p>
                 </ExampleContent>
-                <SaveButton 
-                  onClick={() => handleSave(`${example.english} (${example.korean})`, index)} 
+                <SaveButton
+                  onClick={() =>
+                    handleSave(`${example.english} (${example.korean})`, index)
+                  }
                   variant="secondary"
                   disabled={saveLoading === index}
                 >
-                  {saveLoading === index ? '저장 중...' : '저장'}
+                  {saveLoading === index ? "저장 중..." : "저장"}
                 </SaveButton>
               </ExampleCard>
             ))}
@@ -404,35 +409,30 @@ export default function ExampleGenerator() {
                   <div className="meta">
                     <span>{data.relatedWords.synonym.partOfSpeech}</span>
                   </div>
-                  <div className="meaning">{data.relatedWords.synonym.meaning}</div>
+                  <div className="meaning">
+                    {data.relatedWords.synonym.meaning}
+                  </div>
                 </RelatedWordContent>
               </RelatedWordCard>
 
-              {/* 반의어 */}
-              <RelatedWordCard 
-                type="antonym" 
-                className={!data.relatedWords.antonym ? 'empty' : ''}
-              >
-                <RelatedWordHeader>
-                  <span>❤️</span>
-                  <span>반의어 (Antonym)</span>
-                </RelatedWordHeader>
-                {data.relatedWords.antonym ? (
+              {/* 반의어 - null이면 아예 렌더링 안함 */}
+              {data.relatedWords.antonym && (
+                <RelatedWordCard type="antonym">
+                  <RelatedWordHeader>
+                    <span>❤️</span>
+                    <span>반의어 (Antonym)</span>
+                  </RelatedWordHeader>
                   <RelatedWordContent>
                     <div className="word">{data.relatedWords.antonym.word}</div>
                     <div className="meta">
                       <span>{data.relatedWords.antonym.partOfSpeech}</span>
                     </div>
-                    <div className="meaning">{data.relatedWords.antonym.meaning}</div>
-                  </RelatedWordContent>
-                ) : (
-                  <RelatedWordContent>
-                    <div className="meaning" style={{ color: '#999' }}>
-                      반의어가 없습니다
+                    <div className="meaning">
+                      {data.relatedWords.antonym.meaning}
                     </div>
                   </RelatedWordContent>
-                )}
-              </RelatedWordCard>
+                </RelatedWordCard>
+              )}
             </RelatedWordsGrid>
           </Section>
         </Results>
