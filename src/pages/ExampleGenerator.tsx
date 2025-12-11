@@ -53,15 +53,16 @@ const Section = styled.div`
 `;
 
 const WordInfoCard = styled(Card)`
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  border: 4px solid #3b82f6;
+  background: white;
   padding: 2rem;
 `;
 
 const WordTitle = styled.h3`
-  font-size: 2rem;
+  font-size: 2.5rem;
   margin-bottom: 0.5rem;
   font-weight: bold;
+  color: #1e40af;
 `;
 
 const WordMeta = styled.div`
@@ -69,13 +70,15 @@ const WordMeta = styled.div`
   gap: 1.5rem;
   align-items: center;
   font-size: 1.1rem;
-  opacity: 0.95;
+  color: #475569;
 
   .badge {
-    background: rgba(255, 255, 255, 0.2);
+    background: #eff6ff;
+    color: #1e40af;
     padding: 0.3rem 0.8rem;
     border-radius: 20px;
     font-weight: 500;
+    border: 1px solid #bfdbfe;
   }
 `;
 
