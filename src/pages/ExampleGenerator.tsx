@@ -176,7 +176,7 @@ const RelatedWordsGrid = styled.div`
   gap: 1rem;
 `;
 
-const RelatedWordCard = styled(Card)<{ type: "synonym" | "antonym" }>`
+const RelatedWordCard = styled(Card) <{ type: "synonym" | "antonym" }>`
   border-left: 4px solid
     ${(props) => (props.type === "synonym" ? "#10b981" : "#ef4444")};
   background: ${(props) => (props.type === "synonym" ? "#f0fdf4" : "#fef2f2")};
@@ -364,6 +364,9 @@ export default function ExampleGenerator() {
   };
 
   const highlightWord = (text: string, targetWord: string) => {
+    // text가 undefined이거나 빈 값일 경우 처리
+    if (!text || !targetWord) return text;
+
     const regex = new RegExp(`(\\b${targetWord}\\w*)`, "gi");
     const parts = text.split(regex);
 
@@ -431,7 +434,7 @@ export default function ExampleGenerator() {
             <WordInfoCard>
               <WordTitle>{data.word.original}</WordTitle>
               <MeaningsContainer>
-                {data.word.meanings.map((meaning, index) => (
+                {data.word.meanings?.map((meaning, index) => (
                   <MeaningItem key={index}>
                     <span className="number">{index + 1}</span>
                     <span className="badge">{meaning.partOfSpeech}</span>
@@ -445,13 +448,15 @@ export default function ExampleGenerator() {
           {/* 예문 */}
           <Section>
             <h2>예문</h2>
-            {data.examples.map((example, index) => (
+            {data.examples?.map((example, index) => (
               <ExampleCard key={index}>
                 <ExampleContent>
                   <p className="english">
-                    {highlightWord(example.english, data.word.original)}
+                    {example?.english && data?.word?.original
+                      ? highlightWord(example.english, data.word.original)
+                      : example?.english || ''}
                   </p>
-                  <p className="korean">{example.korean}</p>
+                  <p className="korean">{example?.korean || ''}</p>
                 </ExampleContent>
                 <SaveButton
                   onClick={() =>
@@ -471,24 +476,26 @@ export default function ExampleGenerator() {
             <h2>관련 단어</h2>
             <RelatedWordsGrid>
               {/* 유의어 */}
-              <RelatedWordCard type="synonym">
-                <RelatedWordHeader>
-                  <span>💚</span>
-                  <span>유의어</span>
-                </RelatedWordHeader>
-                <RelatedWordContent>
-                  <div className="word">{data.relatedWords.synonym.word}</div>
-                  <div className="meta">
-                    <span>{data.relatedWords.synonym.partOfSpeech}</span>
-                  </div>
-                  <div className="meaning">
-                    {data.relatedWords.synonym.meaning}
-                  </div>
-                </RelatedWordContent>
-              </RelatedWordCard>
+              {data.relatedWords?.synonym && (
+                <RelatedWordCard type="synonym">
+                  <RelatedWordHeader>
+                    <span>💚</span>
+                    <span>유의어</span>
+                  </RelatedWordHeader>
+                  <RelatedWordContent>
+                    <div className="word">{data.relatedWords.synonym.word}</div>
+                    <div className="meta">
+                      <span>{data.relatedWords.synonym.partOfSpeech}</span>
+                    </div>
+                    <div className="meaning">
+                      {data.relatedWords.synonym.meaning}
+                    </div>
+                  </RelatedWordContent>
+                </RelatedWordCard>
+              )}
 
-              {/* 반의어 - null이면 아예 렌더링 안함 */}
-              {data.relatedWords.antonym && (
+              {/* 반의어 */}
+              {data.relatedWords?.antonym && (
                 <RelatedWordCard type="antonym">
                   <RelatedWordHeader>
                     <span>❤️</span>
