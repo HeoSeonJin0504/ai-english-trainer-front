@@ -6,6 +6,7 @@ import { Card } from "../components/Card";
 import { Loading } from "../components/Loading";
 import { ErrorMessage } from "../components/ErrorMessage";
 import { apiService, type ExampleResponse } from "../services/api";
+import { SpeakerButton } from "../components/SpeakerButton";
 
 const Container = styled.div`
   max-width: 900px;
@@ -63,6 +64,12 @@ const WordTitle = styled.h3`
   margin-bottom: 1rem;
   font-weight: bold;
   color: #1e40af;
+`;
+const WordHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
 `;
 
 const MeaningsContainer = styled.div`
@@ -205,6 +212,9 @@ const RelatedWordContent = styled.div`
     font-weight: bold;
     color: #1e40af;
     margin-bottom: 0.3rem;
+    display: flex;              
+    align-items: center;       
+    gap: 0.5rem;
   }
 
   .meta {
@@ -432,7 +442,10 @@ export default function ExampleGenerator() {
           {/* 단어 정보 */}
           <Section>
             <WordInfoCard>
-              <WordTitle>{data.word.original}</WordTitle>
+              <WordHeader>
+                <WordTitle>{data.word.original}</WordTitle>
+                <SpeakerButton text={data.word.original} size="large" />
+              </WordHeader>
               <MeaningsContainer>
                 {data.word.meanings?.map((meaning, index) => (
                   <MeaningItem key={index}>
@@ -451,11 +464,14 @@ export default function ExampleGenerator() {
             {data.examples?.map((example, index) => (
               <ExampleCard key={index}>
                 <ExampleContent>
-                  <p className="english">
-                    {example?.english && data?.word?.original
-                      ? highlightWord(example.english, data.word.original)
-                      : example?.english || ''}
-                  </p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                    <SpeakerButton text={example.english} size="small" />
+                    <p className="english" style={{ margin: 0 }}>
+                      {example?.english && data?.word?.original
+                        ? highlightWord(example.english, data.word.original)
+                        : example?.english || ''}
+                    </p>
+                  </div>
                   <p className="korean">{example?.korean || ''}</p>
                 </ExampleContent>
                 <SaveButton
@@ -483,7 +499,10 @@ export default function ExampleGenerator() {
                     <span>유의어</span>
                   </RelatedWordHeader>
                   <RelatedWordContent>
-                    <div className="word">{data.relatedWords.synonym.word}</div>
+                    <div className="word">
+                      {data.relatedWords.synonym.word}
+                      <SpeakerButton text={data.relatedWords.synonym.word} size="small" />  {/* ✅ 추가 */}
+                    </div>
                     <div className="meta">
                       <span>{data.relatedWords.synonym.partOfSpeech}</span>
                     </div>
@@ -502,7 +521,10 @@ export default function ExampleGenerator() {
                     <span>반의어</span>
                   </RelatedWordHeader>
                   <RelatedWordContent>
-                    <div className="word">{data.relatedWords.antonym.word}</div>
+                    <div className="word">
+                      {data.relatedWords.antonym.word}
+                      <SpeakerButton text={data.relatedWords.antonym.word} size="small" />  {/* ✅ 추가 */}
+                    </div>
                     <div className="meta">
                       <span>{data.relatedWords.antonym.partOfSpeech}</span>
                     </div>

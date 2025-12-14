@@ -123,7 +123,31 @@ export interface WritingResponse {
   questions: WritingQuestion[];
 }
 
+// TTS 관련 타입
+export interface TTSRequest {
+  text: string;
+  speed?: number;
+  voice?: 'male' | 'female';
+}
+
+export interface TTSResponse {
+  success: boolean;
+  audio?: string;
+  contentType?: string;
+  textLength?: number;
+  error?: string;
+  fallback?: boolean;
+}
+
+export interface TTSStatusResponse {
+  success: boolean;
+  available: boolean;
+  message: string;
+}
+
+// ✅ apiService 하나로 통합
 export const apiService = {
+  // 예문 생성
   async generateExamples(word: string): Promise<ExampleResponse> {
     try {
       const response = await apiClient.post('/generate/examples', { word });
@@ -137,6 +161,7 @@ export const apiService = {
     }
   },
 
+  // 문제 생성
   async generateWritingProblems(topic: string, mode: 'toeic' | 'writing'): Promise<ToeicResponse | WritingResponse> {
     try {
       const response = await apiClient.post('/generate/questions', { topic, mode });
@@ -146,6 +171,7 @@ export const apiService = {
     }
   },
 
+  // 단어 목록 조회
   async getWords() {
     try {
       const response = await apiClient.get('/words');
@@ -155,6 +181,7 @@ export const apiService = {
     }
   },
 
+  // 단어 추가
   async addWord(word: string, examples: string[]) {
     try {
       const response = await apiClient.post('/words', { word, examples });
@@ -164,6 +191,7 @@ export const apiService = {
     }
   },
 
+  // 단어 삭제
   async deleteWord(id: string) {
     try {
       const response = await apiClient.delete(`/words/${id}`);
@@ -172,4 +200,47 @@ export const apiService = {
       throw new Error(error.response?.data?.error || '서버 오류가 발생했습니다.');
     }
   },
+
+  // ✅ TTS 음성 생성
+  async generateTTS(text: string, speed: number = 1.0, voice: 'male' | 'female' = 'female'): Promise<TTSResponse> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/tts/speak`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text, speed, voice }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'TTS 생성 실패');
+      }
+
+      return await response.json();
+    } catch (error: any) {
+      console.error('TTS API 에러:', error);
+      throw error;
+    }
+  },
+
+  // ✅ TTS 서비스 상태 확인
+  async checkTTSStatus(): Promise<TTSStatusResponse> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/tts/status`);
+      
+      if (!response.ok) {
+        throw new Error('TTS 상태 확인 실패');
+      }
+
+      return await response.json();
+    } catch (error: any) {
+      console.error('TTS 상태 확인 에러:', error);
+      return {
+        success: false,
+        available: false,
+        message: 'TTS 서비스를 사용할 수 없습니다.'
+      };
+    }
+  }
 };

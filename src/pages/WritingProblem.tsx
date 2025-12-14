@@ -7,6 +7,7 @@ import { Loading } from '../components/Loading';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { apiService, type ToeicResponse, type WritingResponse } from '../services/api';
 import { gradeWriting, type GradingResult } from '../utils/grading';
+import { SpeakerButton } from '../components/SpeakerButton';
 
 const Container = styled.div`
   max-width: 900px;
@@ -31,11 +32,11 @@ const ModeSelector = styled.div`
   justify-content: center;
 `;
 
-const ModeButton = styled.button<{ active: boolean }>`
+const ModeButton = styled.button<{ $active: boolean }>`
   padding: 0.75rem 2rem;
-  border: 2px solid ${props => props.active ? '#3b82f6' : '#e5e7eb'};
-  background: ${props => props.active ? '#3b82f6' : 'white'};
-  color: ${props => props.active ? 'white' : '#666'};
+  border: 2px solid ${props => props.$active ? '#3b82f6' : '#e5e7eb'};
+  background: ${props => props.$active ? '#3b82f6' : 'white'};
+  color: ${props => props.$active ? 'white' : '#666'};
   border-radius: 12px;
   font-weight: 600;
   cursor: pointer;
@@ -43,7 +44,7 @@ const ModeButton = styled.button<{ active: boolean }>`
 
   &:hover {
     border-color: #3b82f6;
-    background: ${props => props.active ? '#2563eb' : '#eff6ff'};
+    background: ${props => props.$active ? '#2563eb' : '#eff6ff'};
   }
 `;
 
@@ -114,19 +115,19 @@ const OptionsContainer = styled.div`
   margin-bottom: 1rem;
 `;
 
-const OptionButton = styled.button<{ selected?: boolean; showAnswer?: boolean; isCorrect?: boolean; isWrong?: boolean }>`
+const OptionButton = styled.button<{ $selected?: boolean; $showAnswer?: boolean; $isCorrect?: boolean; $isWrong?: boolean }>`
   padding: 0.75rem 1rem;
   text-align: left;
   border: 2px solid ${props => {
-    if (props.showAnswer && props.isCorrect) return '#10b981';
-    if (props.showAnswer && props.isWrong) return '#ef4444';
-    if (props.selected) return '#3b82f6';
+    if (props.$showAnswer && props.$isCorrect) return '#10b981';
+    if (props.$showAnswer && props.$isWrong) return '#ef4444';
+    if (props.$selected) return '#3b82f6';
     return '#e5e7eb';
   }};
   background: ${props => {
-    if (props.showAnswer && props.isCorrect) return '#d1fae5';
-    if (props.showAnswer && props.isWrong) return '#fee2e2';
-    if (props.selected) return '#eff6ff';
+    if (props.$showAnswer && props.$isCorrect) return '#d1fae5';
+    if (props.$showAnswer && props.$isWrong) return '#fee2e2';
+    if (props.$selected) return '#eff6ff';
     return 'white';
   }};
   border-radius: 8px;
@@ -137,8 +138,8 @@ const OptionButton = styled.button<{ selected?: boolean; showAnswer?: boolean; i
   position: relative;
 
   &:hover {
-    border-color: ${props => props.showAnswer ? '' : '#3b82f6'};
-    background: ${props => props.showAnswer ? '' : '#eff6ff'};
+    border-color: ${props => props.$showAnswer ? '' : '#3b82f6'};
+    background: ${props => props.$showAnswer ? '' : '#eff6ff'};
   }
 
   &:disabled {
@@ -146,7 +147,7 @@ const OptionButton = styled.button<{ selected?: boolean; showAnswer?: boolean; i
     opacity: 0.7;
   }
 
-  ${props => props.showAnswer && props.isCorrect && `
+  ${props => props.$showAnswer && props.$isCorrect && `
     &::after {
       content: '✓ 정답';
       position: absolute;
@@ -159,7 +160,7 @@ const OptionButton = styled.button<{ selected?: boolean; showAnswer?: boolean; i
     }
   `}
 
-  ${props => props.showAnswer && props.isWrong && `
+  ${props => props.$showAnswer && props.$isWrong && `
     &::after {
       content: '✗ 오답';
       position: absolute;
@@ -177,7 +178,7 @@ const WritingQuestionCard = styled(Card)`
   margin-bottom: 1rem;
 `;
 
-const TypeBadge = styled.span<{ type: string }>`
+const TypeBadge = styled.span<{ $type: string }>`
   display: inline-block;
   padding: 0.3rem 0.8rem;
   border-radius: 20px;
@@ -185,7 +186,7 @@ const TypeBadge = styled.span<{ type: string }>`
   font-weight: 600;
   margin-bottom: 0.5rem;
   background: ${props => {
-    switch(props.type) {
+    switch (props.$type) {
       case 'situation': return '#dbeafe';
       case 'translation': return '#fef3c7';
       case 'fix': return '#fee2e2';
@@ -194,7 +195,7 @@ const TypeBadge = styled.span<{ type: string }>`
     }
   }};
   color: ${props => {
-    switch(props.type) {
+    switch (props.$type) {
       case 'situation': return '#1e40af';
       case 'translation': return '#92400e';
       case 'fix': return '#991b1b';
@@ -282,12 +283,12 @@ const GradeButton = styled(Button)`
   width: 100%;
 `;
 
-const GradingResultBox = styled.div<{ level: 'excellent' | 'good' | 'fair' | 'poor' }>`
+const GradingResultBox = styled.div<{ $level: 'excellent' | 'good' | 'fair' | 'poor' }>`
   margin-top: 1rem;
   padding: 1.25rem;
   border-radius: 8px;
   border-left: 4px solid ${props => {
-    switch(props.level) {
+    switch (props.$level) {
       case 'excellent': return '#10b981';
       case 'good': return '#3b82f6';
       case 'fair': return '#f59e0b';
@@ -295,7 +296,7 @@ const GradingResultBox = styled.div<{ level: 'excellent' | 'good' | 'fair' | 'po
     }
   }};
   background: ${props => {
-    switch(props.level) {
+    switch (props.$level) {
       case 'excellent': return '#d1fae5';
       case 'good': return '#dbeafe';
       case 'fair': return '#fef3c7';
@@ -304,8 +305,32 @@ const GradingResultBox = styled.div<{ level: 'excellent' | 'good' | 'fair' | 'po
   }};
 `;
 
+const ScoreDisplay = styled.div<{ color: string }>`
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+
+  .score {
+    font-size: 2rem;
+    font-weight: bold;
+    color: ${props => props.color};
+  }
+
+  .label {
+    font-size: 1rem;
+    color: #6b7280;
+  }
+`;
+
+const FeedbackText = styled.div`
+  color: #374151;
+  line-height: 1.6;
+  font-size: 0.95rem;
+`;
+
 const getTypeLabel = (type: string) => {
-  switch(type) {
+  switch (type) {
     case 'situation': return '상황 설명 영작';
     case 'translation': return '한→영 번역';
     case 'fix': return '문장 고치기';
@@ -363,7 +388,7 @@ export default function WritingProblem() {
   const [showAnswers, setShowAnswers] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  
+
   // 영작 모드 전용 상태
   const [writingAnswers, setWritingAnswers] = useState<{ [key: number]: string }>({});
   const [gradingResults, setGradingResults] = useState<{ [key: number]: GradingResult }>({});
@@ -382,10 +407,10 @@ export default function WritingProblem() {
     setWritingData(null);
     setWritingAnswers({});
     setGradingResults({});
-    
+
     try {
       const data = await apiService.generateWritingProblems(topic, mode);
-      
+
       if (data.mode === 'toeic') {
         setToeicData(data as ToeicResponse);
       } else {
@@ -422,7 +447,7 @@ export default function WritingProblem() {
   const handleGradeAnswer = (index: number, modelAnswer: string) => {
     const userAnswer = writingAnswers[index] || '';
     const result = gradeWriting(userAnswer, modelAnswer);
-    
+
     setGradingResults(prev => ({
       ...prev,
       [index]: result
@@ -430,7 +455,7 @@ export default function WritingProblem() {
   };
 
   const getScoreColor = (level: 'excellent' | 'good' | 'fair' | 'poor') => {
-    switch(level) {
+    switch (level) {
       case 'excellent': return '#10b981';
       case 'good': return '#3b82f6';
       case 'fair': return '#f59e0b';
@@ -441,23 +466,22 @@ export default function WritingProblem() {
   return (
     <Container>
       <h1>영어 문제 생성기</h1>
-      
-      <InputSection>
-        <ModeSelector>
-          <ModeButton 
-            active={mode === 'toeic'} 
-            onClick={() => setMode('toeic')}
-          >
-            토익 모드
-          </ModeButton>
-          <ModeButton 
-            active={mode === 'writing'} 
-            onClick={() => setMode('writing')}
-          >
-            영작 모드
-          </ModeButton>
-        </ModeSelector>
-        
+
+      <InputSection>        <ModeSelector>
+        <ModeButton
+          $active={mode === 'toeic'}
+          onClick={() => setMode('toeic')}
+        >
+          토익 모드
+        </ModeButton>
+        <ModeButton
+          $active={mode === 'writing'}
+          onClick={() => setMode('writing')}
+        >
+          영작 모드
+        </ModeButton>
+      </ModeSelector>
+
         <InputRow>
           <Input
             value={topic}
@@ -486,17 +510,67 @@ export default function WritingProblem() {
               </h2>
               {toeicData.questions.part5.map((q, idx) => (
                 <QuestionCard key={`p5-${idx}`}>
-                  <QuestionNumber>문제 {idx + 1}</QuestionNumber>
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'flex-start',
+                    marginBottom: '0.5rem'
+                  }}>
+                    <QuestionNumber>문제 {idx + 1}</QuestionNumber>
+                    <SpeakerButton
+                      text={q.question}
+                      size="small"
+                    />
+                  </div>
+                  <QuestionText>{q.question}</QuestionText>
+                  {/* ... 나머지 코드 ... */}
+                </QuestionCard>
+              ))}
+            </PartSection>
+          )}
+
+          {/* Part 6 */}
+          {toeicData.questions.part6.length > 0 && (
+            <PartSection>
+              <h2>
+                <span className="badge">Part 6</span>
+                문장 삽입
+              </h2>
+              {toeicData.questions.part6.map((q, idx) => (
+                <QuestionCard key={`p6-${idx}`}>
+                  {/* ✅ 여기 수정 */}
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '1rem'
+                  }}>
+                    <QuestionNumber>문제 {idx + 1}</QuestionNumber>
+                    <SpeakerButton
+                      text={q.passage}
+                      variant="text"
+                      speed="normal"
+                    />
+                  </div>
+                  {/* ✅ 여기까지 */}
+
+                  <Passage>{q.passage}</Passage>
+
+                  <InsertSentence>
+                    <div className="label">삽입할 문장</div>
+                    <div className="sentence">{q.insertSentence}</div>
+                  </InsertSentence>
+
                   <QuestionText>{q.question}</QuestionText>
                   <OptionsContainer>
                     {Object.entries(q.options).map(([key, value]) => (
                       <OptionButton
                         key={key}
-                        selected={selectedAnswers[`p5-${idx}`] === key}
-                        showAnswer={showAnswers}
-                        isCorrect={showAnswers && key === q.answer}
-                        isWrong={showAnswers && selectedAnswers[`p5-${idx}`] === key && key !== q.answer}
-                        onClick={() => handleOptionSelect(`p5-${idx}`, key)}
+                        $selected={selectedAnswers[`p6-${idx}`] === key}
+                        $showAnswer={showAnswers}
+                        $isCorrect={showAnswers && key === q.answer}
+                        $isWrong={showAnswers && selectedAnswers[`p6-${idx}`] === key && key !== q.answer}
+                        onClick={() => handleOptionSelect(`p6-${idx}`, key)}
                         disabled={showAnswers}
                       >
                         <strong>{key})</strong> {value}
@@ -515,9 +589,7 @@ export default function WritingProblem() {
                 </QuestionCard>
               ))}
             </PartSection>
-          )}
-
-          {/* Part 6 */}
+          )}{/* Part 6 */}
           {toeicData.questions.part6.length > 0 && (
             <PartSection>
               <h2>
@@ -526,23 +598,38 @@ export default function WritingProblem() {
               </h2>
               {toeicData.questions.part6.map((q, idx) => (
                 <QuestionCard key={`p6-${idx}`}>
-                  <QuestionNumber>문제 {idx + 1}</QuestionNumber>
+                  {/* ✅ 여기 수정 */}
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '1rem'
+                  }}>
+                    <QuestionNumber>문제 {idx + 1}</QuestionNumber>
+                    <SpeakerButton
+                      text={q.passage}
+                      variant="text"
+                      speed="normal"
+                    />
+                  </div>
+                  {/* ✅ 여기까지 */}
+
                   <Passage>{q.passage}</Passage>
-                  
+
                   <InsertSentence>
                     <div className="label">삽입할 문장</div>
                     <div className="sentence">{q.insertSentence}</div>
                   </InsertSentence>
-                  
+
                   <QuestionText>{q.question}</QuestionText>
                   <OptionsContainer>
                     {Object.entries(q.options).map(([key, value]) => (
                       <OptionButton
                         key={key}
-                        selected={selectedAnswers[`p6-${idx}`] === key}
-                        showAnswer={showAnswers}
-                        isCorrect={showAnswers && key === q.answer}
-                        isWrong={showAnswers && selectedAnswers[`p6-${idx}`] === key && key !== q.answer}
+                        $selected={selectedAnswers[`p6-${idx}`] === key}
+                        $showAnswer={showAnswers}
+                        $isCorrect={showAnswers && key === q.answer}
+                        $isWrong={showAnswers && selectedAnswers[`p6-${idx}`] === key && key !== q.answer}
                         onClick={() => handleOptionSelect(`p6-${idx}`, key)}
                         disabled={showAnswers}
                       >
@@ -573,17 +660,29 @@ export default function WritingProblem() {
               </h2>
               {toeicData.questions.part7.map((q, idx) => (
                 <QuestionCard key={`p7-${idx}`}>
-                  <QuestionNumber>문제 {idx + 1}</QuestionNumber>
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '1rem'
+                  }}>
+                    <QuestionNumber>문제 {idx + 1}</QuestionNumber>
+                    <SpeakerButton
+                      text={q.passage}
+                      variant="text"
+                      speed="normal"
+                    />
+                  </div>
                   <Passage>{q.passage}</Passage>
                   <QuestionText>{q.question}</QuestionText>
                   <OptionsContainer>
                     {Object.entries(q.options).map(([key, value]) => (
                       <OptionButton
                         key={key}
-                        selected={selectedAnswers[`p7-${idx}`] === key}
-                        showAnswer={showAnswers}
-                        isCorrect={showAnswers && key === q.answer}
-                        isWrong={showAnswers && selectedAnswers[`p7-${idx}`] === key && key !== q.answer}
+                        $selected={selectedAnswers[`p7-${idx}`] === key}
+                        $showAnswer={showAnswers}
+                        $isCorrect={showAnswers && key === q.answer}
+                        $isWrong={showAnswers && selectedAnswers[`p7-${idx}`] === key && key !== q.answer}
                         onClick={() => handleOptionSelect(`p7-${idx}`, key)}
                         disabled={showAnswers}
                       >
@@ -615,15 +714,14 @@ export default function WritingProblem() {
       {writingData && (
         <Results>
           <PartSection>
-            <h2>영작 연습 문제</h2>
-            {writingData.questions.map((q, idx) => (
+            <h2>영작 연습 문제</h2>            {writingData.questions.map((q, idx) => (
               <WritingQuestionCard key={idx}>
-                <TypeBadge type={q.type}>{getTypeLabel(q.type)}</TypeBadge>
+                <TypeBadge $type={q.type}>{getTypeLabel(q.type)}</TypeBadge>
                 <QuestionNumber>문제 {idx + 1}</QuestionNumber>
                 <QuestionText>{q.question}</QuestionText>
-                
+
                 {q.hint && <Hint>{q.hint}</Hint>}
-                
+
                 {/* 답안 입력 섹션 */}
                 <WritingAnswerSection>
                   <AnswerLabel>내 답안</AnswerLabel>
@@ -633,7 +731,7 @@ export default function WritingProblem() {
                     placeholder="영어로 답안을 작성하세요..."
                     disabled={showAnswers}
                   />
-                  
+
                   {!showAnswers && (
                     <GradeButton
                       onClick={() => handleGradeAnswer(idx, q.answer)}
@@ -642,11 +740,9 @@ export default function WritingProblem() {
                     >
                       채점하기
                     </GradeButton>
-                  )}
-
-                  {/* 채점 결과 */}
+                  )}                  {/* 채점 결과 */}
                   {gradingResults[idx] && !showAnswers && (
-                    <GradingResultBox level={gradingResults[idx].level}>
+                    <GradingResultBox $level={gradingResults[idx].level}>
                       <ScoreDisplay color={getScoreColor(gradingResults[idx].level)}>
                         <div className="score">{gradingResults[idx].score}점</div>
                         <div className="label">/ 100점</div>
