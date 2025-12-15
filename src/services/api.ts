@@ -12,8 +12,10 @@ const apiClient = axios.create({
 export interface Word {
   id: string;
   word: string;
-  examples: string[];
+  partOfSpeech: string[]; // ✅ 추가
+  examples: Example[]; // ✅ 타입 변경
   createdAt: string;
+  updatedAt?: string; // ✅ 추가
 }
 
 export interface Example {
@@ -181,10 +183,14 @@ export const apiService = {
     }
   },
 
-  // 단어 추가
-  async addWord(word: string, examples: string[]) {
+  // 단어 추가 - 파라미터 수정
+  async addWord(word: string, partOfSpeech: string[], examples: Example[]) {
     try {
-      const response = await apiClient.post('/words', { word, examples });
+      const response = await apiClient.post('/words', { 
+        word, 
+        partOfSpeech,
+        examples 
+      });
       return response.data;
     } catch (error: any) {
       throw new Error(error.response?.data?.error || '서버 오류가 발생했습니다.');

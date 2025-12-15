@@ -4,6 +4,7 @@ import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { Loading } from '../components/Loading';
 import { ErrorMessage } from '../components/ErrorMessage';
+import { SpeakerButton } from '../components/SpeakerButton';
 import { apiService, type Word } from '../services/api';
 
 const Container = styled.div`
@@ -43,11 +44,31 @@ const ItemHeader = styled.div`
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
+`;
 
+const WordTitleSection = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  
   h3 {
     color: #3b82f6;
     font-size: 1.3rem;
+    margin: 0;
   }
+`;
+
+const PartOfSpeechBadge = styled.span`
+  display: inline-block;
+  background: #eff6ff;
+  color: #1e40af;
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: 1px solid #bfdbfe;
+  margin-right: 0.5rem;
+  margin-top: 0.5rem;
 `;
 
 const DeleteButton = styled(Button)`
@@ -55,10 +76,29 @@ const DeleteButton = styled(Button)`
   font-size: 0.9rem;
 `;
 
-const Example = styled.p`
+const Example = styled.div`
   color: #333;
   line-height: 1.6;
   margin-bottom: 0.5rem;
+  
+  .example-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-bottom: 0.25rem;
+  }
+  
+  .english {
+    color: #1e40af;
+    font-weight: 500;
+    flex: 1;
+  }
+  
+  .korean {
+    color: #666;
+    font-size: 0.95rem;
+    padding-left: 2rem;
+  }
 `;
 
 const DateText = styled.p`
@@ -116,7 +156,17 @@ export default function Vocabulary() {
           {items.map((item) => (
             <ItemCard key={item.id}>
               <ItemHeader>
-                <h3>{item.word}</h3>
+                <div>
+                  <WordTitleSection>
+                    <h3>{item.word}</h3>
+                    <SpeakerButton text={item.word} size="small" />
+                  </WordTitleSection>
+                  <div>
+                    {item.partOfSpeech?.map((pos, idx) => (
+                      <PartOfSpeechBadge key={idx}>{pos}</PartOfSpeechBadge>
+                    ))}
+                  </div>
+                </div>
                 <DeleteButton 
                   onClick={() => handleDelete(item.id)}
                   variant="danger"
@@ -124,8 +174,14 @@ export default function Vocabulary() {
                   삭제
                 </DeleteButton>
               </ItemHeader>
-              {item.examples.map((example, idx) => (
-                <Example key={idx}>{example}</Example>
+              {item.examples?.map((example, idx) => (
+                <Example key={idx}>
+                  <div className="example-row">
+                    <SpeakerButton text={example.english} size="small" />
+                    <span className="english">{example.english}</span>
+                  </div>
+                  <div className="korean">{example.korean}</div>
+                </Example>
               ))}
               <DateText>
                 {new Date(item.createdAt).toLocaleDateString('ko-KR')}

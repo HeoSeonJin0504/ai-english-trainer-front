@@ -5,7 +5,7 @@ import { Button } from "../components/Button";
 import { Card } from "../components/Card";
 import { Loading } from "../components/Loading";
 import { ErrorMessage } from "../components/ErrorMessage";
-import { apiService, type ExampleResponse } from "../services/api";
+import { apiService, type ExampleResponse, type Example } from "../services/api";
 import { SpeakerButton } from "../components/SpeakerButton";
 
 const Container = styled.div`
@@ -359,12 +359,18 @@ export default function ExampleGenerator() {
     }
   };
 
-  const handleSave = async (example: string, index: number) => {
+  const handleSave = async (example: Example, index: number) => {
     if (!data) return;
 
     setSaveLoading(index);
     try {
-      await apiService.addWord(data.word.original, [example]);
+      // ✅ 백엔드 스펙에 맞게 수정
+      const partOfSpeech = data.word.meanings.map(m => m.partOfSpeech);
+      await apiService.addWord(
+        data.word.original, 
+        partOfSpeech,
+        [example] // Example 객체를 배열로 전달
+      );
       alert("단어장에 저장되었습니다!");
     } catch (err: any) {
       alert(err.message || "저장에 실패했습니다.");
@@ -475,9 +481,7 @@ export default function ExampleGenerator() {
                   <p className="korean">{example?.korean || ''}</p>
                 </ExampleContent>
                 <SaveButton
-                  onClick={() =>
-                    handleSave(`${example.english} (${example.korean})`, index)
-                  }
+                  onClick={() => handleSave(example, index)} // ✅ 전체 example 객체 전달
                   variant="secondary"
                   disabled={saveLoading === index}
                 >
