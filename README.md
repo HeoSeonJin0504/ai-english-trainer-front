@@ -343,7 +343,7 @@ GET  /tts/status           // TTS 서비스 상태 확인
 
 ## 개발
 
-본 프로젝트는 GitHub Copilot (Claude Sonnet 4.5I를 활용하여 코드 작성, 리팩토링 작업을 수행했습니다.
+본 프로젝트는 GitHub Copilot (Claude Sonnet 4.5를 활용하여 코드 작성, 리팩토링 작업을 수행했습니다.
 
 ---
 
