@@ -1,4 +1,4 @@
-# AI English Trainer (Front)
+# AI English Trainer (Front, Node.js api용)
 
 AI English Trainer는 OpenAI GPT와 Google Cloud TTS를 활용한 영어 학습 플랫폼입니다.
 
