@@ -5,7 +5,15 @@ import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { Loading } from '../components/Loading';
 import { ErrorMessage } from '../components/ErrorMessage';
-import { apiService, type ToeicResponse, type WritingResponse } from '../services/api';
+import { 
+  apiService, 
+  type ToeicResponse, 
+  type WritingResponse,
+  type ToeicPart5Question,
+  type ToeicPart6Question,
+  type ToeicPart7Question,
+  type WritingQuestion
+} from '../services/api';
 import { gradeWriting, type GradingResult } from '../utils/grading';
 import { SpeakerButton } from '../components/SpeakerButton';
 
@@ -379,6 +387,49 @@ const Explanation = styled.div`
   }
 `;
 
+const LoadingWithMessage = styled.div`
+  text-align: center;
+  color: #1e40af;
+
+  .spinner-container {
+    margin-bottom: 1rem;
+  }
+
+  .message {
+    font-size: 0.95rem;
+    color: #64748b;
+    line-height: 1.6;
+  }
+`;
+
+const PageDescription = styled.div`
+  text-align: center;
+  margin-bottom: 2rem;
+  color: #64748b;
+  font-size: 0.95rem;
+  line-height: 1.6;
+
+  .highlight {
+    color: #3b82f6;
+    font-weight: 600;
+  }
+`;
+
+const SaveAllButton = styled(Button)`
+  width: 100%;
+  margin-bottom: 1rem;
+  background: #10b981;
+  
+  &:hover {
+    background: #059669;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+`;
+
 export default function WritingProblem() {
   const [mode, setMode] = useState<'toeic' | 'writing'>('toeic');
   const [topic, setTopic] = useState('');
@@ -388,6 +439,8 @@ export default function WritingProblem() {
   const [showAnswers, setShowAnswers] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [saveAllLoading, setSaveAllLoading] = useState(false);
+  const [savingQuestions, setSavingQuestions] = useState<Set<string>>(new Set());
 
   // 영작 모드 전용 상태
   const [writingAnswers, setWritingAnswers] = useState<{ [key: number]: string }>({});
@@ -417,7 +470,14 @@ export default function WritingProblem() {
         setWritingData(data as WritingResponse);
       }
     } catch (err: any) {
-      setError(err.message || '문제 생성에 실패했습니다.');
+      const errorMessage = err.message || '문제 생성에 실패했습니다.';
+      
+      if (errorMessage.includes('일시적으로 사용 불가능')) {
+        setError(errorMessage);
+        alert('AI 서비스 오류: 잠시 후 다시 시도해주세요.');
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setLoading(false);
     }
@@ -463,24 +523,222 @@ export default function WritingProblem() {
     }
   };
 
+  const handleSaveAllQuestions = async () => {
+    if (!topic.trim()) {
+      alert('주제가 없습니다.');
+      return;
+    }
+
+    setSaveAllLoading(true);
+    try {
+      let savedCount = 0;
+
+      if (toeicData) {
+        // Part 5 저장
+        for (const q of toeicData.questions.part5) {
+          await apiService.saveQuestion({
+            mode: 'TOEIC',
+            toeicPart: 'PART5',
+            topic: topic,
+            question: q.question,
+            options: q.options,
+            answer: q.answer,
+            explanation: q.explanation
+          });
+          savedCount++;
+        }
+
+        // Part 6 저장
+        for (const q of toeicData.questions.part6) {
+          await apiService.saveQuestion({
+            mode: 'TOEIC',
+            toeicPart: 'PART6',
+            topic: topic,
+            passage: q.passage,
+            insertSentence: q.insertSentence,
+            question: q.question,
+            options: q.options,
+            answer: q.answer,
+            explanation: q.explanation
+          });
+          savedCount++;
+        }
+
+        // Part 7 저장
+        for (const q of toeicData.questions.part7) {
+          await apiService.saveQuestion({
+            mode: 'TOEIC',
+            toeicPart: 'PART7',
+            topic: topic,
+            passage: q.passage,
+            question: q.question,
+            options: q.options,
+            answer: q.answer,
+            explanation: q.explanation
+          });
+          savedCount++;
+        }
+      } else if (writingData) {
+        // 영작 문제 저장
+        for (const q of writingData.questions) {
+          await apiService.saveQuestion({
+            mode: 'WRITING',
+            writingType: q.type,
+            topic: topic,
+            question: q.question,
+            hint: q.hint,
+            answer: q.answer
+          });
+          savedCount++;
+        }
+      }
+
+      alert(`${savedCount}개의 문제가 저장되었습니다!`);
+    } catch (err: any) {
+      alert(err.message || '문제 저장에 실패했습니다.');
+    } finally {
+      setSaveAllLoading(false);
+    }
+  };
+
+  // 개별 문제 저장 - Part 5
+  const handleSavePart5Question = async (q: ToeicPart5Question, idx: number) => {
+    const key = `p5-${idx}`;
+    if (savingQuestions.has(key)) return;
+
+    setSavingQuestions(prev => new Set(prev).add(key));
+    try {
+      await apiService.saveQuestion({
+        mode: 'TOEIC',
+        toeicPart: 'PART5',
+        topic: topic,
+        question: q.question,
+        options: q.options,
+        answer: q.answer,
+        explanation: q.explanation
+      });
+      alert('문제가 저장되었습니다!');
+    } catch (err: any) {
+      alert(err.message || '문제 저장에 실패했습니다.');
+    } finally {
+      setSavingQuestions(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(key);
+        return newSet;
+      });
+    }
+  };
+
+  // 개별 문제 저장 - Part 6
+  const handleSavePart6Question = async (q: ToeicPart6Question, idx: number) => {
+    const key = `p6-${idx}`;
+    if (savingQuestions.has(key)) return;
+
+    setSavingQuestions(prev => new Set(prev).add(key));
+    try {
+      await apiService.saveQuestion({
+        mode: 'TOEIC',
+        toeicPart: 'PART6',
+        topic: topic,
+        passage: q.passage,
+        insertSentence: q.insertSentence,
+        question: q.question,
+        options: q.options,
+        answer: q.answer,
+        explanation: q.explanation
+      });
+      alert('문제가 저장되었습니다!');
+    } catch (err: any) {
+      alert(err.message || '문제 저장에 실패했습니다.');
+    } finally {
+      setSavingQuestions(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(key);
+        return newSet;
+      });
+    }
+  };
+
+  // 개별 문제 저장 - Part 7
+  const handleSavePart7Question = async (q: ToeicPart7Question, idx: number) => {
+    const key = `p7-${idx}`;
+    if (savingQuestions.has(key)) return;
+
+    setSavingQuestions(prev => new Set(prev).add(key));
+    try {
+      await apiService.saveQuestion({
+        mode: 'TOEIC',
+        toeicPart: 'PART7',
+        topic: topic,
+        passage: q.passage,
+        question: q.question,
+        options: q.options,
+        answer: q.answer,
+        explanation: q.explanation
+      });
+      alert('문제가 저장되었습니다!');
+    } catch (err: any) {
+      alert(err.message || '문제 저장에 실패했습니다.');
+    } finally {
+      setSavingQuestions(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(key);
+        return newSet;
+      });
+    }
+  };
+
+  // 개별 영작 문제 저장
+  const handleSaveWritingQuestion = async (q: WritingQuestion, idx: number) => {
+    const key = `w-${idx}`;
+    if (savingQuestions.has(key)) return;
+
+    setSavingQuestions(prev => new Set(prev).add(key));
+    try {
+      await apiService.saveQuestion({
+        mode: 'WRITING',
+        writingType: q.type,
+        topic: topic,
+        question: q.question,
+        hint: q.hint,
+        answer: q.answer
+      });
+      alert('문제가 저장되었습니다!');
+    } catch (err: any) {
+      alert(err.message || '문제 저장에 실패했습니다.');
+    } finally {
+      setSavingQuestions(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(key);
+        return newSet;
+      });
+    }
+  };
+
   return (
     <Container>
       <h1>영어 문제 생성기</h1>
 
-      <InputSection>        <ModeSelector>
-        <ModeButton
-          $active={mode === 'toeic'}
-          onClick={() => setMode('toeic')}
-        >
-          토익 모드
-        </ModeButton>
-        <ModeButton
-          $active={mode === 'writing'}
-          onClick={() => setMode('writing')}
-        >
-          영작 모드
-        </ModeButton>
-      </ModeSelector>
+      <PageDescription>
+        원하는 주제를 입력하면 AI가 맞춤형 문제를 생성합니다.<br />
+        <span className="highlight">토익 모드</span>는 Part 5·6·7 문제를, <span className="highlight">영작 모드</span>는 다양한 영작 문제를 제공합니다.
+      </PageDescription>
+
+      <InputSection>
+        <ModeSelector>
+          <ModeButton
+            $active={mode === 'toeic'}
+            onClick={() => setMode('toeic')}
+          >
+            토익 모드
+          </ModeButton>
+          <ModeButton
+            $active={mode === 'writing'}
+            onClick={() => setMode('writing')}
+          >
+            영작 모드
+          </ModeButton>
+        </ModeSelector>
 
         <InputRow>
           <Input
@@ -495,12 +753,30 @@ export default function WritingProblem() {
         </InputRow>
       </InputSection>
 
-      {loading && <Loading />}
+      {loading && (
+        <LoadingWithMessage>
+          <div className="spinner-container">
+            <Loading />
+          </div>
+          <div className="message">
+            AI가 문제를 생성하고 있습니다...<br />
+            {mode === 'toeic' ? '약 5~10초' : '약 5~10초'} 정도 소요됩니다.
+          </div>
+        </LoadingWithMessage>
+      )}
+      
       {error && <ErrorMessage message={error} onClose={() => setError('')} />}
 
       {/* 토익 모드 결과 */}
       {toeicData && (
         <Results>
+          <SaveAllButton 
+            onClick={handleSaveAllQuestions}
+            disabled={saveAllLoading}
+          >
+            {saveAllLoading ? '저장 중...' : '📥 모든 문제 저장하기'}
+          </SaveAllButton>
+
           {/* Part 5 */}
           {toeicData.questions.part5.length > 0 && (
             <PartSection>
@@ -516,61 +792,29 @@ export default function WritingProblem() {
                     alignItems: 'flex-start',
                     marginBottom: '0.5rem'
                   }}>
-                    <QuestionNumber>문제 {idx + 1}</QuestionNumber>
-                    <SpeakerButton
-                      text={q.question}
-                      size="small"
-                    />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                      <QuestionNumber>문제 {idx + 1}</QuestionNumber>
+                      <Button
+                        onClick={() => handleSavePart5Question(q, idx)}
+                        variant="secondary"
+                        disabled={savingQuestions.has(`p5-${idx}`)}
+                        style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}
+                      >
+                        {savingQuestions.has(`p5-${idx}`) ? '저장 중...' : '💾 저장'}
+                      </Button>
+                    </div>
+                    <SpeakerButton text={q.question} size="small" />
                   </div>
-                  <QuestionText>{q.question}</QuestionText>
-                  {/* ... 나머지 코드 ... */}
-                </QuestionCard>
-              ))}
-            </PartSection>
-          )}
-
-          {/* Part 6 */}
-          {toeicData.questions.part6.length > 0 && (
-            <PartSection>
-              <h2>
-                <span className="badge">Part 6</span>
-                문장 삽입
-              </h2>
-              {toeicData.questions.part6.map((q, idx) => (
-                <QuestionCard key={`p6-${idx}`}>
-                  {/* ✅ 여기 수정 */}
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: '1rem'
-                  }}>
-                    <QuestionNumber>문제 {idx + 1}</QuestionNumber>
-                    <SpeakerButton
-                      text={q.passage}
-                      variant="text"
-                      speed="normal"
-                    />
-                  </div>
-                  {/* ✅ 여기까지 */}
-
-                  <Passage>{q.passage}</Passage>
-
-                  <InsertSentence>
-                    <div className="label">삽입할 문장</div>
-                    <div className="sentence">{q.insertSentence}</div>
-                  </InsertSentence>
-
                   <QuestionText>{q.question}</QuestionText>
                   <OptionsContainer>
                     {Object.entries(q.options).map(([key, value]) => (
                       <OptionButton
                         key={key}
-                        $selected={selectedAnswers[`p6-${idx}`] === key}
+                        $selected={selectedAnswers[`p5-${idx}`] === key}
                         $showAnswer={showAnswers}
                         $isCorrect={showAnswers && key === q.answer}
-                        $isWrong={showAnswers && selectedAnswers[`p6-${idx}`] === key && key !== q.answer}
-                        onClick={() => handleOptionSelect(`p6-${idx}`, key)}
+                        $isWrong={showAnswers && selectedAnswers[`p5-${idx}`] === key && key !== q.answer}
+                        onClick={() => handleOptionSelect(`p5-${idx}`, key)}
                         disabled={showAnswers}
                       >
                         <strong>{key})</strong> {value}
@@ -589,7 +833,9 @@ export default function WritingProblem() {
                 </QuestionCard>
               ))}
             </PartSection>
-          )}{/* Part 6 */}
+          )}
+
+          {/* Part 6 - 중복 제거 */}
           {toeicData.questions.part6.length > 0 && (
             <PartSection>
               <h2>
@@ -598,29 +844,30 @@ export default function WritingProblem() {
               </h2>
               {toeicData.questions.part6.map((q, idx) => (
                 <QuestionCard key={`p6-${idx}`}>
-                  {/* ✅ 여기 수정 */}
                   <div style={{
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     marginBottom: '1rem'
                   }}>
-                    <QuestionNumber>문제 {idx + 1}</QuestionNumber>
-                    <SpeakerButton
-                      text={q.passage}
-                      variant="text"
-                      speed="normal"
-                    />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                      <QuestionNumber>문제 {idx + 1}</QuestionNumber>
+                      <Button
+                        onClick={() => handleSavePart6Question(q, idx)}
+                        variant="secondary"
+                        disabled={savingQuestions.has(`p6-${idx}`)}
+                        style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}
+                      >
+                        {savingQuestions.has(`p6-${idx}`) ? '저장 중...' : '💾 저장'}
+                      </Button>
+                    </div>
+                    <SpeakerButton text={q.passage} variant="text" speed="normal" />
                   </div>
-                  {/* ✅ 여기까지 */}
-
                   <Passage>{q.passage}</Passage>
-
                   <InsertSentence>
                     <div className="label">삽입할 문장</div>
                     <div className="sentence">{q.insertSentence}</div>
                   </InsertSentence>
-
                   <QuestionText>{q.question}</QuestionText>
                   <OptionsContainer>
                     {Object.entries(q.options).map(([key, value]) => (
@@ -666,12 +913,18 @@ export default function WritingProblem() {
                     alignItems: 'center',
                     marginBottom: '1rem'
                   }}>
-                    <QuestionNumber>문제 {idx + 1}</QuestionNumber>
-                    <SpeakerButton
-                      text={q.passage}
-                      variant="text"
-                      speed="normal"
-                    />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                      <QuestionNumber>문제 {idx + 1}</QuestionNumber>
+                      <Button
+                        onClick={() => handleSavePart7Question(q, idx)}
+                        variant="secondary"
+                        disabled={savingQuestions.has(`p7-${idx}`)}
+                        style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}
+                      >
+                        {savingQuestions.has(`p7-${idx}`) ? '저장 중...' : '💾 저장'}
+                      </Button>
+                    </div>
+                    <SpeakerButton text={q.passage} variant="text" speed="normal" />
                   </div>
                   <Passage>{q.passage}</Passage>
                   <QuestionText>{q.question}</QuestionText>
@@ -713,10 +966,30 @@ export default function WritingProblem() {
       {/* 영작 모드 결과 */}
       {writingData && (
         <Results>
+          <SaveAllButton 
+            onClick={handleSaveAllQuestions}
+            disabled={saveAllLoading}
+          >
+            {saveAllLoading ? '저장 중...' : '📥 모든 문제 저장하기'}
+          </SaveAllButton>
+
           <PartSection>
-            <h2>영작 연습 문제</h2>            {writingData.questions.map((q, idx) => (
+            <h2>영작 연습 문제</h2>
+            {writingData.questions.map((q, idx) => (
               <WritingQuestionCard key={idx}>
-                <TypeBadge $type={q.type}>{getTypeLabel(q.type)}</TypeBadge>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <TypeBadge $type={q.type}>{getTypeLabel(q.type)}</TypeBadge>
+                    <Button
+                      onClick={() => handleSaveWritingQuestion(q, idx)}
+                      variant="secondary"
+                      disabled={savingQuestions.has(`w-${idx}`)}
+                      style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}
+                    >
+                      {savingQuestions.has(`w-${idx}`) ? '저장 중...' : '💾 저장'}
+                    </Button>
+                  </div>
+                </div>
                 <QuestionNumber>문제 {idx + 1}</QuestionNumber>
                 <QuestionText>{q.question}</QuestionText>
 

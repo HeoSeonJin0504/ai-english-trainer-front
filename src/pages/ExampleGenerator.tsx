@@ -5,7 +5,11 @@ import { Button } from "../components/Button";
 import { Card } from "../components/Card";
 import { Loading } from "../components/Loading";
 import { ErrorMessage } from "../components/ErrorMessage";
-import { apiService, type ExampleResponse, type Example } from "../services/api";
+import { 
+  apiService, 
+  type ExampleResponse,
+  type Example 
+} from "../services/api";
 import { SpeakerButton } from "../components/SpeakerButton";
 
 const Container = styled.div`
@@ -290,13 +294,30 @@ const InvalidWordMessage = styled.div`
   }
 `;
 
+const PageDescription = styled.div`
+  text-align: center;
+  margin-bottom: 2rem;
+  color: #64748b;
+  font-size: 0.95rem;
+  line-height: 1.6;
+
+  .highlight {
+    color: #3b82f6;
+    font-weight: 600;
+  }
+`;
+
 export default function ExampleGenerator() {
   const [word, setWord] = useState("");
   const [data, setData] = useState<ExampleResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [invalidWord, setInvalidWord] = useState(false);
-  const [saveLoading, setSaveLoading] = useState<number | null>(null);
+  const [saveLoading, setSaveLoading] = useState<{
+    type: 'word' | 'example' | 'synonym' | 'antonym';
+    index?: number;
+  } | null>(null);
+  const [savedWordId, setSavedWordId] = useState<number | null>(null);
 
   // 영어 문자만 허용하는 함수
   const isEnglishOnly = (text: string): boolean => {
@@ -351,6 +372,9 @@ export default function ExampleGenerator() {
       if (errorMessage.includes("유효한 영어 단어가 아닙니다")) {
         setInvalidWord(true);
         setError(errorMessage);
+      } else if (errorMessage.includes("일시적으로 사용 불가능")) {
+        setError(errorMessage);
+        alert('AI 서비스 오류: 잠시 후 다시 시도해주세요.');
       } else {
         setError(errorMessage);
       }
@@ -359,21 +383,69 @@ export default function ExampleGenerator() {
     }
   };
 
-  const handleSave = async (example: Example, index: number) => {
+  // 단어 저장 (meanings 배열의 첫 번째 항목만 저장)
+  const handleSaveWord = async () => {
+    if (!data || !data.word.meanings || data.word.meanings.length === 0) return;
+
+    setSaveLoading({ type: 'word' });
+    try {
+      const firstMeaning = data.word.meanings[0];
+      const response = await apiService.saveWord({
+        word: data.word.original,
+        partOfSpeech: firstMeaning.partOfSpeech,
+        meaning: firstMeaning.meaning
+      });
+      
+      setSavedWordId(response.data.id);
+      alert('단어가 저장되었습니다!');
+    } catch (err: any) {
+      alert(err.message || '저장에 실패했습니다.');
+    } finally {
+      setSaveLoading(null);
+    }
+  };
+
+  // 예문 저장 (개별)
+  const handleSaveExample = async (example: Example, index: number) => {
     if (!data) return;
 
-    setSaveLoading(index);
+    setSaveLoading({ type: 'example', index });
     try {
-      // ✅ 백엔드 스펙에 맞게 수정
-      const partOfSpeech = data.word.meanings.map(m => m.partOfSpeech);
-      await apiService.addWord(
-        data.word.original, 
-        partOfSpeech,
-        [example] // Example 객체를 배열로 전달
-      );
-      alert("단어장에 저장되었습니다!");
+      await apiService.saveExample({
+        english: example.english,
+        korean: example.korean,
+        wordId: savedWordId || undefined
+      });
+      
+      alert('예문이 저장되었습니다!');
     } catch (err: any) {
-      alert(err.message || "저장에 실패했습니다.");
+      alert(err.message || '저장에 실패했습니다.');
+    } finally {
+      setSaveLoading(null);
+    }
+  };
+
+  // 유의어/반의어 저장
+  const handleSaveRelatedWord = async (type: 'synonym' | 'antonym') => {
+    if (!data || !data.relatedWords) return;
+
+    const relatedWord = type === 'synonym' 
+      ? data.relatedWords.synonym 
+      : data.relatedWords.antonym;
+
+    if (!relatedWord) return;
+
+    setSaveLoading({ type });
+    try {
+      await apiService.saveWord({
+        word: relatedWord.word,
+        partOfSpeech: relatedWord.partOfSpeech,
+        meaning: relatedWord.meaning
+      });
+      
+      alert(`${type === 'synonym' ? '유의어' : '반의어'}가 저장되었습니다!`);
+    } catch (err: any) {
+      alert(err.message || '저장에 실패했습니다.');
     } finally {
       setSaveLoading(null);
     }
@@ -401,6 +473,11 @@ export default function ExampleGenerator() {
   return (
     <Container>
       <h1>예문 생성기</h1>
+      
+      <PageDescription>
+        영어 단어를 입력하면 AI가 <span className="highlight">실용적인 예문 3개</span>와<br />
+        <span className="highlight">유의어·반의어</span>까지 자동으로 생성해드립니다.
+      </PageDescription>
 
       <InputCard>
         <Input
@@ -461,6 +538,15 @@ export default function ExampleGenerator() {
                   </MeaningItem>
                 ))}
               </MeaningsContainer>
+              
+              {/* 단어 저장 버튼 */}
+              <SaveButton
+                onClick={handleSaveWord}
+                disabled={saveLoading?.type === 'word'}
+                style={{ marginTop: '1rem', width: '100%' }}
+              >
+                {saveLoading?.type === 'word' ? '저장 중...' : '단어 저장'}
+              </SaveButton>
             </WordInfoCard>
           </Section>
 
@@ -481,11 +567,11 @@ export default function ExampleGenerator() {
                   <p className="korean">{example?.korean || ''}</p>
                 </ExampleContent>
                 <SaveButton
-                  onClick={() => handleSave(example, index)} // ✅ 전체 example 객체 전달
+                  onClick={() => handleSaveExample(example, index)}
                   variant="secondary"
-                  disabled={saveLoading === index}
+                  disabled={saveLoading?.type === 'example' && saveLoading?.index === index}
                 >
-                  {saveLoading === index ? "저장 중..." : "저장"}
+                  {saveLoading?.type === 'example' && saveLoading?.index === index ? '저장 중...' : '저장'}
                 </SaveButton>
               </ExampleCard>
             ))}
@@ -514,6 +600,14 @@ export default function ExampleGenerator() {
                       {data.relatedWords.synonym.meaning}
                     </div>
                   </RelatedWordContent>
+                  <SaveButton
+                    onClick={() => handleSaveRelatedWord('synonym')}
+                    variant="secondary"
+                    disabled={saveLoading?.type === 'synonym'}
+                    style={{ marginTop: '0.75rem', width: '100%', padding: '0.5rem' }}
+                  >
+                    {saveLoading?.type === 'synonym' ? '저장 중...' : '저장'}
+                  </SaveButton>
                 </RelatedWordCard>
               )}
 
@@ -536,6 +630,14 @@ export default function ExampleGenerator() {
                       {data.relatedWords.antonym.meaning}
                     </div>
                   </RelatedWordContent>
+                  <SaveButton
+                    onClick={() => handleSaveRelatedWord('antonym')}
+                    variant="secondary"
+                    disabled={saveLoading?.type === 'antonym'}
+                    style={{ marginTop: '0.75rem', width: '100%', padding: '0.5rem' }}
+                  >
+                    {saveLoading?.type === 'antonym' ? '저장 중...' : '저장'}
+                  </SaveButton>
                 </RelatedWordCard>
               )}
             </RelatedWordsGrid>

@@ -22,11 +22,15 @@ const Spinner = styled.div`
   animation: ${spin} 1s linear infinite;
 `;
 
-export function Loading() {
+interface LoadingProps {
+  message?: string;
+}
+
+export function Loading({ message = '생성 중...' }: LoadingProps) {
   return (
     <LoadingContainer>
       <Spinner />
-      <p>생성 중...</p>
+      <p>{message}</p>
     </LoadingContainer>
   );
 }

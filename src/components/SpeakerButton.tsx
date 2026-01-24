@@ -1,6 +1,6 @@
 import styled from 'styled-components';
-import { useState, useEffect } from 'react';
-import { speak, stopSpeaking } from '../utils/tts';
+import { useState, useEffect, useRef } from 'react';
+import { apiService } from '../services/api';
 
 interface SpeakerButtonProps {
   text: string;
@@ -88,32 +88,105 @@ const TextButton = styled.button<{ $isPlaying: boolean }>`
   }
 `;
 
-export const SpeakerButton: React.FC<SpeakerButtonProps> = ({
+export function SpeakerButton({
   text,
   size = 'medium',
   variant = 'icon',
   speed = 'normal'
-}) => {
+}: SpeakerButtonProps) {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [useFallback, setUseFallback] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    return () => {
-      stopSpeaking();
-    };
+    checkTTSAvailability();
   }, []);
 
-  const handleClick = () => {
-    if (isPlaying) {
-      stopSpeaking();
-      setIsPlaying(false);
-    } else {
-      const rate = speed === 'slow' ? 0.7 : speed === 'fast' ? 1.2 : 0.9;
+  const checkTTSAvailability = async () => {
+    try {
+      const status = await apiService.checkTTSStatus();
+      if (!status.success || !status.data?.available) {
+        setUseFallback(true);
+      }
+    } catch (error) {
+      setUseFallback(true);
+    }
+  };
+
+  const getSpeedValue = (speed: 'slow' | 'normal' | 'fast'): number => {
+    switch (speed) {
+      case 'slow': return 0.75;
+      case 'fast': return 1.25;
+      default: return 1.0;
+    }
+  };
+
+  const playWithWebSpeech = () => {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'en-US';
+      utterance.rate = getSpeedValue(speed);
       
+      utterance.onstart = () => setIsPlaying(true);
+      utterance.onend = () => setIsPlaying(false);
+      utterance.onerror = () => setIsPlaying(false);
+      
+      window.speechSynthesis.speak(utterance);
+    }
+  };
+
+  const playWithGoogleTTS = async () => {
+    try {
       setIsPlaying(true);
-      
-      speak(text, { rate }, () => {
+
+      const response = await apiService.generateTTS(text, getSpeedValue(speed), 'female');
+
+      if (!response.success || !response.data) {
+        // TTS 서비스 불가 시 Web Speech API로 대체
+        playWithWebSpeech();
+        setUseFallback(true);
+        return;
+      }
+
+      // Base64 오디오 데이터를 Audio 객체로 재생
+      const audio = new Audio(`data:${response.data.contentType};base64,${response.data.audio}`);
+      audioRef.current = audio;
+
+      audio.onended = () => setIsPlaying(false);
+      audio.onerror = () => {
         setIsPlaying(false);
-      });
+        // 에러 발생 시 Web Speech API로 대체
+        playWithWebSpeech();
+        setUseFallback(true);
+      };
+
+      await audio.play();
+    } catch (error) {
+      console.error('TTS 재생 실패:', error);
+      // 에러 발생 시 Web Speech API로 대체
+      playWithWebSpeech();
+      setUseFallback(true);
+    }
+  };
+
+  const handleClick = async () => {
+    if (isPlaying) {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+      setIsPlaying(false);
+      return;
+    }
+
+    if (useFallback) {
+      playWithWebSpeech();
+    } else {
+      await playWithGoogleTTS();
     }
   };
 
@@ -142,4 +215,4 @@ export const SpeakerButton: React.FC<SpeakerButtonProps> = ({
       {isPlaying ? '⏸️' : '🔊'}
     </IconButton>
   );
-};
+}

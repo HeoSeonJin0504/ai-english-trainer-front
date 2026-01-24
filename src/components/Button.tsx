@@ -9,6 +9,7 @@ const StyledButton = styled.button<{ $variant: 'primary' | 'secondary' | 'danger
   font-weight: 600;
   transition: all 0.2s;
   cursor: pointer;
+  white-space: nowrap;
   background: ${props => {
     switch (props.$variant) {
       case 'secondary': return '#10b981';

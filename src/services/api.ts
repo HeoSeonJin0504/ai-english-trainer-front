@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -9,15 +9,128 @@ const apiClient = axios.create({
   },
 });
 
-export interface Word {
-  id: string;
-  word: string;
-  partOfSpeech: string[]; // ✅ 추가
-  examples: Example[]; // ✅ 타입 변경
-  createdAt: string;
-  updatedAt?: string; // ✅ 추가
+// JWT 토큰 자동 추가 인터셉터 (auth 경로는 제외)
+apiClient.interceptors.request.use(
+  (config) => {
+    // /auth/** 경로는 토큰 불필요
+    const isAuthPath = config.url?.startsWith('/auth/');
+    
+    if (!isAuthPath) {
+      const token = localStorage.getItem('accessToken');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    }
+    
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// 응답 인터셉터 (401/403 에러 시 로그아웃 처리)
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const status = error.response?.status;
+    
+    // 401 Unauthorized 또는 403 Forbidden
+    if (status === 401 || status === 403) {
+      const isAuthPath = error.config?.url?.startsWith('/auth/');
+      
+      // auth 경로가 아닌 경우에만 로그아웃 처리
+      if (!isAuthPath) {
+        console.warn('인증 오류: 토큰이 만료되었거나 유효하지 않습니다.');
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('user');
+        
+        // 현재 페이지가 로그인/회원가입이 아닌 경우에만 리다이렉트
+        if (!window.location.pathname.startsWith('/login') && 
+            !window.location.pathname.startsWith('/signup')) {
+          alert('로그인이 만료되었습니다. 다시 로그인해주세요.');
+          window.location.href = '/login';
+        }
+      }
+    }
+    
+    return Promise.reject(error);
+  }
+);
+
+// 회원 관련 타입
+export interface SignupRequest {
+  username: string;
+  password: string;
+  phone: string;
+  email?: string;
+  gender: 'MALE' | 'FEMALE';
+  age: number;
 }
 
+export interface User {
+  id: number;
+  username: string;
+  phone: string;
+  email?: string;
+  gender?: string;
+  age?: number;
+  createdAt?: string;
+}
+
+export interface LoginResponse {
+  accessToken: string;
+  tokenType: string;
+  expiresIn: number;
+  user: User;
+}
+
+export interface ApiResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
+}
+
+export interface ValidationError {
+  [field: string]: string;
+}
+
+export interface ValidationErrorResponse {
+  success: false;
+  message: string;
+  data: ValidationError;
+}
+
+// 단어장 관련 타입 (정규화)
+export interface WordDto {
+  id: number;
+  word: string;
+  partOfSpeech: string;
+  meaning: string;
+  createdAt: string;
+}
+
+export interface ExampleDto {
+  id: number;
+  english: string;
+  korean: string;
+  word: WordDto | null;
+  createdAt: string;
+}
+
+export interface SaveWordRequest {
+  word: string;
+  partOfSpeech: string;
+  meaning: string;
+}
+
+export interface SaveExampleRequest {
+  english: string;
+  korean: string;
+  wordId?: number;
+}
+
+// 예문 생성 응답용 타입
 export interface Example {
   english: string;
   korean: string;
@@ -46,21 +159,10 @@ export interface RelatedWords {
 }
 
 export interface ExampleResponse {
+  isValid: boolean;
   word: WordInfo;
   examples: Example[];
   relatedWords: RelatedWords;
-}
-
-export interface Question {
-  question: string;
-  translation: string;
-  options: {
-    A: string;
-    B: string;
-    C: string;
-    D: string;
-  };
-  answer: string;
 }
 
 // 토익 모드 타입
@@ -125,6 +227,62 @@ export interface WritingResponse {
   questions: WritingQuestion[];
 }
 
+// 문제 생성 응답 타입
+export interface QuestionGenerationResponse {
+  mode: 'toeic' | 'writing';
+  questions: {
+    part5: ToeicPart5Question[];
+    part6: ToeicPart6Question[];
+    part7: ToeicPart7Question[];
+  } | null;
+  writingQuestions: WritingQuestion[] | null;
+}
+
+// 문제 저장 관련 타입
+export type QuestionMode = 'TOEIC' | 'WRITING';
+export type ToeicPart = 'PART5' | 'PART6' | 'PART7';
+export type WritingType = 'situation' | 'translation' | 'fix' | 'short-answer';
+
+export interface SaveQuestionRequest {
+  mode: QuestionMode;
+  toeicPart?: ToeicPart;
+  writingType?: WritingType;
+  topic: string;
+  passage?: string;
+  insertSentence?: string;
+  question: string;
+  options?: {
+    A: string;
+    B: string;
+    C: string;
+    D: string;
+  };
+  answer: string;
+  hint?: string;
+  explanation?: string;
+}
+
+export interface SavedQuestionDto {
+  id: number;
+  mode: QuestionMode;
+  toeicPart: ToeicPart | null;
+  writingType: WritingType | null;
+  topic: string;
+  passage: string | null;
+  insertSentence: string | null;
+  question: string;
+  options: {
+    A: string;
+    B: string;
+    C: string;
+    D: string;
+  } | null;
+  answer: string;
+  hint: string | null;
+  explanation: string | null;
+  createdAt: string;
+}
+
 // TTS 관련 타입
 export interface TTSRequest {
   text: string;
@@ -134,119 +292,478 @@ export interface TTSRequest {
 
 export interface TTSResponse {
   success: boolean;
-  audio?: string;
-  contentType?: string;
-  textLength?: number;
-  error?: string;
-  fallback?: boolean;
+  data?: {
+    audio: string;
+    contentType: string;
+    textLength: number;
+  };
+  message?: string;
 }
 
 export interface TTSStatusResponse {
   success: boolean;
-  available: boolean;
-  message: string;
+  data?: {
+    available: boolean;
+    message: string;
+  };
+  message?: string;
 }
 
-// ✅ apiService 하나로 통합
+// apiService
 export const apiService = {
+  // 아이디 중복 확인 (인증 불필요)
+  async checkUsername(username: string): Promise<ApiResponse<boolean>> {
+    try {
+      const response = await apiClient.get<ApiResponse<boolean>>(`/auth/check-username?username=${username}`);
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || '아이디 중복 확인에 실패했습니다.');
+    }
+  },
+
+  // 핸드폰 중복 확인 (인증 불필요)
+  async checkPhone(phone: string): Promise<ApiResponse<boolean>> {
+    try {
+      const response = await apiClient.get<ApiResponse<boolean>>(`/auth/check-phone?phone=${phone}`);
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || '핸드폰 번호 중복 확인에 실패했습니다.');
+    }
+  },
+
+  // 회원가입 (인증 불필요)
+  async signup(data: SignupRequest): Promise<ApiResponse<User>> {
+    try {
+      const response = await apiClient.post<ApiResponse<User>>('/auth/signup', data);
+      return response.data;
+    } catch (error: any) {
+      // 유효성 검증 에러 처리
+      if (error.response?.status === 400 && error.response?.data?.data) {
+        const validationErrors = error.response.data.data;
+        const errorMessages = Object.values(validationErrors).join('\n');
+        throw new Error(errorMessages);
+      }
+      throw new Error(error.response?.data?.message || '회원가입에 실패했습니다.');
+    }
+  },
+
+  // 로그인 (인증 불필요)
+  async login(username: string, password: string): Promise<ApiResponse<LoginResponse>> {
+    try {
+      const response = await apiClient.post<ApiResponse<LoginResponse>>('/auth/login', {
+        username,
+        password
+      });
+      
+      // 토큰과 사용자 정보 저장
+      if (response.data.success && response.data.data) {
+        const { accessToken, expiresIn, user } = response.data.data;
+        
+        localStorage.setItem('accessToken', accessToken);
+        localStorage.setItem('user', JSON.stringify(user));
+        
+        // 토큰 만료 시간 저장 (선택사항)
+        const expiryTime = Date.now() + expiresIn;
+        localStorage.setItem('tokenExpiry', expiryTime.toString());
+      }
+      
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || '로그인에 실패했습니다.');
+    }
+  },
+
+  // 로그아웃
+  logout() {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('user');
+    localStorage.removeItem('tokenExpiry');
+  },
+
+  // 현재 사용자 정보 가져오기
+  getCurrentUser(): User | null {
+    const userStr = localStorage.getItem('user');
+    return userStr ? JSON.parse(userStr) : null;
+  },
+
+  // 로그인 여부 확인
+  isLoggedIn(): boolean {
+    const token = localStorage.getItem('accessToken');
+    const expiry = localStorage.getItem('tokenExpiry');
+    
+    if (!token) return false;
+    
+    // 토큰 만료 확인 (선택사항)
+    if (expiry && Date.now() > parseInt(expiry)) {
+      this.logout();
+      return false;
+    }
+    
+    return true;
+  },
+
+  // 토큰 만료 시간 확인 (선택사항)
+  getTokenExpiry(): number | null {
+    const expiry = localStorage.getItem('tokenExpiry');
+    return expiry ? parseInt(expiry) : null;
+  },
+
   // 예문 생성
   async generateExamples(word: string): Promise<ExampleResponse> {
     try {
-      const response = await apiClient.post('/generate/examples', { word });
-      return response.data;
-    } catch (error: any) {
-      // 400 에러이고 Invalid word 메시지가 있는 경우
-      if (error.response?.status === 400 && error.response?.data?.error === 'Invalid word') {
-        throw new Error(error.response.data.message || '유효한 영어 단어가 아닙니다.');
+      const response = await apiClient.post<ApiResponse<ExampleResponse>>('/generate/examples', { word });
+      
+      // 1단계: success 확인
+      if (!response.data.success) {
+        throw new Error(response.data.message || '유효한 영어 단어가 아닙니다.');
       }
-      throw new Error(error.response?.data?.error || '서버 오류가 발생했습니다.');
+      
+      // 2단계: data가 null인지 확인
+      if (!response.data.data) {
+        throw new Error('유효한 영어 단어가 아닙니다.');
+      }
+      
+      // 3단계: isValid 확인
+      if (!response.data.data.isValid) {
+        throw new Error('유효한 영어 단어가 아닙니다.');
+      }
+      
+      return response.data.data;
+    } catch (error: any) {
+      // 이미 생성된 에러 메시지가 있으면 그대로 전달
+      if (error.message) {
+        throw error;
+      }
+      
+      // HTTP 상태 코드별 처리
+      if (error.response?.status === 400) {
+        throw new Error(error.response?.data?.message || '유효한 영어 단어가 아닙니다.');
+      }
+      
+      if (error.response?.status === 503) {
+        throw new Error('AI 서비스가 일시적으로 사용 불가능합니다. 잠시 후 다시 시도해주세요.');
+      }
+      
+      throw new Error(error.response?.data?.message || '서버 오류가 발생했습니다.');
     }
   },
 
   // 문제 생성
   async generateWritingProblems(topic: string, mode: 'toeic' | 'writing'): Promise<ToeicResponse | WritingResponse> {
     try {
-      const response = await apiClient.post('/generate/questions', { topic, mode });
+      const response = await apiClient.post<ApiResponse<QuestionGenerationResponse>>('/generate/questions', { topic, mode });
+      const data = response.data.data;
+      
+      // mode에 따라 적절한 형태로 반환
+      if (data.mode === 'toeic' && data.questions) {
+        return {
+          mode: 'toeic',
+          questions: data.questions
+        };
+      } else if (data.mode === 'writing' && data.writingQuestions) {
+        return {
+          mode: 'writing',
+          questions: data.writingQuestions
+        };
+      } else {
+        throw new Error('올바르지 않은 응답 형식입니다.');
+      }
+    } catch (error: any) {
+      if (error.response?.status === 400 && error.response?.data?.data) {
+        const validationErrors = error.response.data.data;
+        const errorMessages = Object.values(validationErrors).join('\n');
+        throw new Error(errorMessages);
+      }
+      if (error.response?.status === 503) {
+        throw new Error('AI 서비스가 일시적으로 사용 불가능합니다. 잠시 후 다시 시도해주세요.');
+      }
+      throw new Error(error.response?.data?.message || '서버 오류가 발생했습니다.');
+    }
+  },
+
+  // 단어 저장
+  async saveWord(data: SaveWordRequest): Promise<ApiResponse<WordDto>> {
+    try {
+      const response = await apiClient.post<ApiResponse<WordDto>>('/words', data);
       return response.data;
     } catch (error: any) {
-      throw new Error(error.response?.data?.error || '서버 오류가 발생했습니다.');
+      if (error.response?.status === 409) {
+        throw new Error('이미 저장된 단어입니다.');
+      }
+      throw new Error(error.response?.data?.message || '단어 저장에 실패했습니다.');
+    }
+  },
+
+  // 예문 저장
+  async saveExample(data: SaveExampleRequest): Promise<ApiResponse<ExampleDto>> {
+    try {
+      const response = await apiClient.post<ApiResponse<ExampleDto>>('/examples', data);
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || '예문 저장에 실패했습니다.');
     }
   },
 
   // 단어 목록 조회
-  async getWords() {
+  async getWords(): Promise<WordDto[]> {
     try {
-      const response = await apiClient.get('/words');
-      return response.data;
+      const response = await apiClient.get<ApiResponse<WordDto[]>>('/words');
+      return response.data.data;
     } catch (error: any) {
-      throw new Error(error.response?.data?.error || '서버 오류가 발생했습니다.');
+      throw new Error(error.response?.data?.message || '단어 목록을 불러오는데 실패했습니다.');
     }
   },
 
-  // 단어 추가 - 파라미터 수정
-  async addWord(word: string, partOfSpeech: string[], examples: Example[]) {
+  // 예문 목록 조회
+  async getExamples(): Promise<ExampleDto[]> {
     try {
-      const response = await apiClient.post('/words', { 
-        word, 
-        partOfSpeech,
-        examples 
-      });
-      return response.data;
+      const response = await apiClient.get<ApiResponse<ExampleDto[]>>('/examples');
+      return response.data.data;
     } catch (error: any) {
-      throw new Error(error.response?.data?.error || '서버 오류가 발생했습니다.');
+      throw new Error(error.response?.data?.message || '예문 목록을 불러오는데 실패했습니다.');
+    }
+  },
+
+  // 특정 단어의 예문 조회
+  async getExamplesByWord(wordId: number): Promise<ExampleDto[]> {
+    try {
+      const response = await apiClient.get<ApiResponse<ExampleDto[]>>(`/examples/word/${wordId}`);
+      return response.data.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || '예문 조회에 실패했습니다.');
+    }
+  },
+
+  // 단어 검색
+  async searchWords(keyword: string): Promise<WordDto[]> {
+    try {
+      const response = await apiClient.get<ApiResponse<WordDto[]>>(`/words/search?keyword=${encodeURIComponent(keyword)}`);
+      return response.data.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || '단어 검색에 실패했습니다.');
+    }
+  },
+
+  // 예문 검색
+  async searchExamples(keyword: string): Promise<ExampleDto[]> {
+    try {
+      const response = await apiClient.get<ApiResponse<ExampleDto[]>>(`/examples/search?keyword=${encodeURIComponent(keyword)}`);
+      return response.data.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || '예문 검색에 실패했습니다.');
+    }
+  },
+
+  // 단어 상세 조회
+  async getWord(wordId: number): Promise<WordDto> {
+    try {
+      const response = await apiClient.get<ApiResponse<WordDto>>(`/words/${wordId}`);
+      return response.data.data;
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        throw new Error('단어를 찾을 수 없습니다.');
+      }
+      throw new Error(error.response?.data?.message || '단어 조회에 실패했습니다.');
     }
   },
 
   // 단어 삭제
-  async deleteWord(id: string) {
+  async deleteWord(wordId: number): Promise<void> {
     try {
-      const response = await apiClient.delete(`/words/${id}`);
-      return response.data;
+      await apiClient.delete(`/words/${wordId}`);
     } catch (error: any) {
-      throw new Error(error.response?.data?.error || '서버 오류가 발생했습니다.');
+      if (error.response?.status === 404) {
+        throw new Error('단어를 찾을 수 없습니다.');
+      }
+      throw new Error(error.response?.data?.message || '단어 삭제에 실패했습니다.');
     }
   },
 
-  // ✅ TTS 음성 생성
+  // 예문 삭제
+  async deleteExample(exampleId: number): Promise<void> {
+    try {
+      await apiClient.delete(`/examples/${exampleId}`);
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        throw new Error('예문을 찾을 수 없습니다.');
+      }
+      throw new Error(error.response?.data?.message || '예문 삭제에 실패했습니다.');
+    }
+  },
+
+  // 단어 개수 조회
+  async getWordsCount(): Promise<number> {
+    try {
+      const response = await apiClient.get<ApiResponse<number>>('/words/count');
+      return response.data.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || '단어 개수 조회에 실패했습니다.');
+    }
+  },
+
+  // 예문 개수 조회
+  async getExamplesCount(): Promise<number> {
+    try {
+      const response = await apiClient.get<ApiResponse<number>>('/examples/count');
+      return response.data.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || '예문 개수 조회에 실패했습니다.');
+    }
+  },
+
+  // TTS 음성 생성
   async generateTTS(text: string, speed: number = 1.0, voice: 'male' | 'female' = 'female'): Promise<TTSResponse> {
     try {
-      const response = await fetch(`${API_BASE_URL}/tts/speak`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ text, speed, voice }),
+      const response = await apiClient.post<TTSResponse>('/tts/speak', {
+        text,
+        speed,
+        voice
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'TTS 생성 실패');
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.status === 503) {
+        // TTS 서비스 불가 시 Web Speech API 사용 안내
+        return {
+          success: false,
+          message: 'TTS 서비스를 사용할 수 없습니다. Web Speech API를 사용해주세요.'
+        };
+      }
+      
+      if (error.response?.status === 400) {
+        throw new Error(error.response?.data?.message || '입력값이 올바르지 않습니다.');
       }
 
-      return await response.json();
-    } catch (error: any) {
-      console.error('TTS API 에러:', error);
-      throw error;
+      throw new Error(error.response?.data?.message || 'TTS 생성에 실패했습니다.');
     }
   },
 
-  // ✅ TTS 서비스 상태 확인
+  // TTS 서비스 상태 확인
   async checkTTSStatus(): Promise<TTSStatusResponse> {
     try {
-      const response = await fetch(`${API_BASE_URL}/tts/status`);
-      
-      if (!response.ok) {
-        throw new Error('TTS 상태 확인 실패');
-      }
-
-      return await response.json();
+      const response = await apiClient.get<TTSStatusResponse>('/tts/status');
+      return response.data;
     } catch (error: any) {
       console.error('TTS 상태 확인 에러:', error);
       return {
         success: false,
-        available: false,
         message: 'TTS 서비스를 사용할 수 없습니다.'
       };
     }
-  }
+  },
+
+  // 문제 저장
+  async saveQuestion(data: SaveQuestionRequest): Promise<ApiResponse<SavedQuestionDto>> {
+    try {
+      const response = await apiClient.post<ApiResponse<SavedQuestionDto>>('/questions', data);
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || '문제 저장에 실패했습니다.');
+    }
+  },
+
+  // 내 문제 전체 조회
+  async getQuestions(): Promise<SavedQuestionDto[]> {
+    try {
+      const response = await apiClient.get<ApiResponse<SavedQuestionDto[]>>('/questions');
+      return response.data.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || '문제 목록을 불러오는데 실패했습니다.');
+    }
+  },
+
+  // 토익 문제 조회
+  async getToeicQuestions(): Promise<SavedQuestionDto[]> {
+    try {
+      const response = await apiClient.get<ApiResponse<SavedQuestionDto[]>>('/questions/toeic');
+      return response.data.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || '토익 문제 조회에 실패했습니다.');
+    }
+  },
+
+  // 토익 파트별 조회
+  async getToeicQuestionsByPart(part: ToeicPart): Promise<SavedQuestionDto[]> {
+    try {
+      const response = await apiClient.get<ApiResponse<SavedQuestionDto[]>>(`/questions/toeic/${part}`);
+      return response.data.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || '문제 조회에 실패했습니다.');
+    }
+  },
+
+  // 영작 문제 조회
+  async getWritingQuestions(): Promise<SavedQuestionDto[]> {
+    try {
+      const response = await apiClient.get<ApiResponse<SavedQuestionDto[]>>('/questions/writing');
+      return response.data.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || '영작 문제 조회에 실패했습니다.');
+    }
+  },
+
+  // 주제별 검색
+  async searchQuestions(topic: string): Promise<SavedQuestionDto[]> {
+    try {
+      const response = await apiClient.get<ApiResponse<SavedQuestionDto[]>>(`/questions/search?topic=${encodeURIComponent(topic)}`);
+      return response.data.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || '검색에 실패했습니다.');
+    }
+  },
+
+  // 문제 상세 조회
+  async getQuestion(id: number): Promise<SavedQuestionDto> {
+    try {
+      const response = await apiClient.get<ApiResponse<SavedQuestionDto>>(`/questions/${id}`);
+      return response.data.data;
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        throw new Error('문제를 찾을 수 없습니다.');
+      }
+      throw new Error(error.response?.data?.message || '문제 조회에 실패했습니다.');
+    }
+  },
+
+  // 문제 삭제
+  async deleteQuestion(id: number): Promise<void> {
+    try {
+      await apiClient.delete(`/questions/${id}`);
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        throw new Error('문제를 찾을 수 없습니다.');
+      }
+      throw new Error(error.response?.data?.message || '문제 삭제에 실패했습니다.');
+    }
+  },
+
+  // 전체 문제 개수
+  async getQuestionsCount(): Promise<number> {
+    try {
+      const response = await apiClient.get<ApiResponse<number>>('/questions/count');
+      return response.data.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || '문제 개수 조회에 실패했습니다.');
+    }
+  },
+
+  // 토익 문제 개수
+  async getToeicQuestionsCount(): Promise<number> {
+    try {
+      const response = await apiClient.get<ApiResponse<number>>('/questions/toeic/count');
+      return response.data.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || '토익 문제 개수 조회에 실패했습니다.');
+    }
+  },
+
+  // 영작 문제 개수
+  async getWritingQuestionsCount(): Promise<number> {
+    try {
+      const response = await apiClient.get<ApiResponse<number>>('/questions/writing/count');
+      return response.data.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || '영작 문제 개수 조회에 실패했습니다.');
+    }
+  },
 };

@@ -2,7 +2,7 @@ import { type InputHTMLAttributes } from 'react';
 import styled from 'styled-components';
 
 const StyledInput = styled.input`
-  flex: 1;
+  width: 100%;
   padding: 0.75rem 1rem;
   border: 2px solid #e2e8f0;
   border-radius: 8px;
