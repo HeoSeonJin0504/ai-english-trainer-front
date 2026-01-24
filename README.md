@@ -116,7 +116,7 @@ npm install
 `.env` 파일을 생성하고 다음 내용을 설정하세요:
 ```env
 # 백엔드 API 서버 주소
-VITE_API_BASE_URL=http://localhost:8080/api
+VITE_API_BASE_URL=http://localhost:3000/api
 ```
 
 ### 4. 개발 서버 실행
