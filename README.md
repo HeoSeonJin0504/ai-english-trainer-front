@@ -353,5 +353,5 @@ GET  /tts/status           // TTS 서비스 상태 확인
 
 - **프론트엔드 (React)** - 현재 저장소
   
-- **백엔드 (Spring Boot)** - API 서버 및 Google Cloud TTS 연동
+- **백엔드 (Node.js)** - API 서버 및 Google Cloud TTS 연동
   - https://github.com/HeoSeonJin0504/ai-english-trainer-node.git
