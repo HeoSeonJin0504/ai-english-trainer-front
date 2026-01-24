@@ -2,6 +2,8 @@
 
 AI English Trainer는 OpenAI GPT와 Google Cloud TTS를 활용한 영어 학습 플랫폼입니다.
 
+** 본 프로젝트는 2개의 브랜치(Node.js, Spring api용)로 나누어져 있습니다.
+
 ---
 
 ## 📌 프로젝트 개요
@@ -352,4 +354,4 @@ GET  /tts/status           // TTS 서비스 상태 확인
 - **프론트엔드 (React)** - 현재 저장소
   
 - **백엔드 (Spring Boot)** - API 서버 및 Google Cloud TTS 연동
-  - https://github.com/HeoSeonJin0504/ai-english-trainer-spring.git
+  - https://github.com/HeoSeonJin0504/ai-english-trainer-node.git
