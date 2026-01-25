@@ -1,4 +1,4 @@
-# AI English Trainer (Front)
+# AI English Trainer (REACT)
 
 > AI 기반 맞춤형 영어 학습 플랫폼  
 > OpenAI GPT를 활용한 토익/영작 문제 자동 생성 및 자동 채점 시스템
