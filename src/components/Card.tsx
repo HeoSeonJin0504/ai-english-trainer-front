@@ -3,10 +3,11 @@ import styled from 'styled-components';
 
 const StyledCard = styled.div`
   background: white;
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 1.75rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.03);
+  border: 2px solid #f1f5f9;
+  transition: all 0.3s ease;
 `;
 
 interface CardProps extends HTMLAttributes<HTMLDivElement> {
