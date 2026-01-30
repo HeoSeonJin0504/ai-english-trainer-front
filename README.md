@@ -87,5 +87,5 @@ npm run dev
 - **백엔드 (Node.js)** - API 서버 및 Google Cloud TTS 연동
   - https://github.com/HeoSeonJin0504/ai-english-trainer-node.git
 
-- **백엔드 (Java Spring)** - API 서버 및 Google Cloud TTS 연동
+- **백엔드 (Java Spring Boot)** - API 서버 및 Google Cloud TTS 연동
   - https://github.com/HeoSeonJin0504/ai-english-trainer-spring.git
