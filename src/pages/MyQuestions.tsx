@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
@@ -7,15 +7,30 @@ import { Loading } from '../components/Loading';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { apiService, type SavedQuestionDto, type ToeicPart } from '../services/api';
 
+const fadeIn = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`;
+
 const Container = styled.div`
   max-width: 1000px;
   margin: 0 auto;
   padding: 2rem;
+  animation: ${fadeIn} 0.5s ease-out;
 
   h1 {
-    color: #1e40af;
-    margin-bottom: 2rem;
+    color: #3f56a1;
+    margin-bottom: 1rem;
     text-align: center;
+    font-size: 2.5rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
   }
 `;
 
@@ -49,6 +64,12 @@ const FilterSection = styled(Card)`
   gap: 1rem;
   align-items: center;
   flex-wrap: wrap;
+  transition: all 0.3s;
+
+  &:hover {
+    border-color: #3b82f6;
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.12);
+  }
 `;
 
 const PartFilter = styled.div`
@@ -60,14 +81,15 @@ const PartButton = styled.button<{ $active: boolean }>`
   padding: 0.5rem 1rem;
   border: 2px solid ${props => props.$active ? '#3b82f6' : '#e5e7eb'};
   background: ${props => props.$active ? '#eff6ff' : 'white'};
-  color: ${props => props.$active ? '#3b82f6' : '#666'};
+  color: ${props => props.$active ? '#3b82f6' : '#64748b'};
   border-radius: 8px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s;
 
   &:hover {
     border-color: #3b82f6;
+    background: #eff6ff;
   }
 `;
 
@@ -86,6 +108,13 @@ const QuestionList = styled.div`
 
 const QuestionCard = styled(Card)`
   padding: 1.5rem;
+  transition: all 0.3s;
+
+  &:hover {
+    border-color: #e0e7ff;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.08);
+    transform: translateY(-2px);
+  }
 `;
 
 const QuestionHeader = styled.div`
@@ -129,7 +158,7 @@ const QuestionContent = styled.div`
   margin-bottom: 1rem;
 
   .question-text {
-    font-size: 1.05rem;
+    font-size: 1.15rem;
     color: #1e40af;
     font-weight: 500;
     margin-bottom: 1rem;
@@ -142,11 +171,13 @@ const QuestionContent = styled.div`
     border-radius: 8px;
     margin-bottom: 1rem;
     line-height: 1.8;
+    font-size: 1.05rem;
     color: #333;
     white-space: pre-wrap;
   }
 
   .insert-sentence {
+    font-size: 1.05rem;  
     background: #fef3c7;
     padding: 0.75rem 1rem;
     border-radius: 8px;
