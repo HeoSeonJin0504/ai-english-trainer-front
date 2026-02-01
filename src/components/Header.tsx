@@ -21,7 +21,7 @@ const NavContainer = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  height: 64px;
+  height: 70px;
 `;
 
 const LeftSection = styled.div`
@@ -54,7 +54,7 @@ const NavLinks = styled.div`
 const NavLink = styled(Link)<{ $active: boolean }>`
   color: ${(props) => props.$active ? 'white' : 'rgba(255, 255, 255, 0.75)'};
   text-decoration: none;
-  padding: 0 1.25rem;
+  padding: 0 2rem;
   height: 100%;
   display: flex;
   align-items: center;
