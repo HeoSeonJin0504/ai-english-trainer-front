@@ -80,8 +80,8 @@ const ModeSelector = styled.div`
 
 const ModeButton = styled.button<{ $active: boolean }>`
   padding: 0.75rem 2rem;
-  border: 2px solid ${(props) => (props.$active ? "#3b82f6" : "#e5e7eb")};
-  background: ${(props) => (props.$active ? "#3b82f6" : "white")};
+  border: 2px solid ${(props) => (props.$active ? "#2563eb" : "#e5e7eb")};
+  background: ${(props) => (props.$active ? "#2563eb" : "white")};
   color: ${(props) => (props.$active ? "white" : "#666")};
   border-radius: 12px;
   font-weight: 600;
@@ -90,7 +90,7 @@ const ModeButton = styled.button<{ $active: boolean }>`
 
   &:hover {
     border-color: #3b82f6;
-    background: ${(props) => (props.$active ? "#2563eb" : "#eff6ff")};
+    background: ${(props) => (props.$active ? "#0442a5" : "#eff6ff")};
   }
 `;
 

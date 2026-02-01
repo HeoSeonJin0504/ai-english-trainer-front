@@ -14,7 +14,7 @@ const StyledButton = styled.button<{ $variant: 'primary' | 'secondary' | 'danger
     switch (props.$variant) {
       case 'secondary': return '#10b981';
       case 'danger': return '#ef4444';
-      default: return '#3b82f6';
+      default: return '#2563eb';
     }
   }};
   color: white;
