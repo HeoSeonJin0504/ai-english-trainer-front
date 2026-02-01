@@ -16,14 +16,14 @@ const IconButton = styled.button<{ $size: string; $isPlaying: boolean }>`
   border-radius: 50%;
   width: ${props => {
     switch(props.$size) {
-      case 'small': return '32px';
+      case 'small': return '28px';
       case 'large': return '48px';
       default: return '40px';
     }
   }};
   height: ${props => {
     switch(props.$size) {
-      case 'small': return '32px';
+      case 'small': return '28px';
       case 'large': return '48px';
       default: return '40px';
     }
@@ -35,11 +35,12 @@ const IconButton = styled.button<{ $size: string; $isPlaying: boolean }>`
   transition: all 0.2s;
   font-size: ${props => {
     switch(props.$size) {
-      case 'small': return '0.9rem';
+      case 'small': return '0.75rem';
       case 'large': return '1.3rem';
       default: return '1.1rem';
     }
   }};
+  flex-shrink: 0;
 
   &:hover {
     background: ${props => props.$isPlaying ? '#dc2626' : '#2563eb'};
