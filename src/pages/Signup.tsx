@@ -14,7 +14,9 @@ const Container = styled.div`
 `;
 
 const Title = styled.h1`
-  color: #1e40af;
+  color: #3f56a1;
+  font-weight: 800;
+  letter-spacing: -0.5px;
   text-align: center;
   margin-bottom: 2rem;
   font-size: 2rem;

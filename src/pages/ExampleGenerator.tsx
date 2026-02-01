@@ -1,5 +1,5 @@
 import { useState } from "react";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import { Input } from "../components/Input";
 import { Button } from "../components/Button";
 import { Card } from "../components/Card";
@@ -12,15 +12,30 @@ import {
 } from "../services/api";
 import { SpeakerButton } from "../components/SpeakerButton";
 
+const fadeIn = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`;
+
 const Container = styled.div`
   max-width: 900px;
   margin: 0 auto;
   padding: 2rem;
+  animation: ${fadeIn} 0.5s ease-out;
 
   h1 {
-    color: #1e40af;
-    margin-bottom: 2rem;
+    color: #3f56a1;
+    margin-bottom: 1rem;
     text-align: center;
+    font-size: 2.5rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
   }
 `;
 
@@ -28,87 +43,106 @@ const InputCard = styled(Card)`
   display: flex;
   gap: 1rem;
   margin-bottom: 2rem;
+  transition: all 0.3s;
+
+  &:hover {
+    border-color: #3b82f6;
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.12);
+  }
 `;
 
 const Results = styled.div`
   margin-top: 2rem;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 2rem;
 `;
 
 const Section = styled.div`
   h2 {
-    color: #1e40af;
-    margin-bottom: 1rem;
-    font-size: 1.3rem;
+    color: #3f56a1;
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.75rem;
+    font-weight: 700;
 
     &::before {
       content: "";
       display: inline-block;
       width: 4px;
-      height: 1.3rem;
-      background: #3b82f6;
+      height: 1.5rem;
+      background: linear-gradient(180deg, #3b82f6 0%, #8b5cf6 100%);
       border-radius: 2px;
     }
   }
 `;
 
 const WordInfoCard = styled(Card)`
-  border: 4px solid #3b82f6;
+  border: 3px solid #3b82f6;
   background: white;
-  padding: 2rem;
+  padding: 2.5rem;
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.12);
 `;
 
 const WordTitle = styled.h3`
-  font-size: 2.5rem;
-  margin-bottom: 1rem;
-  font-weight: bold;
-  color: #1e40af;
+  font-size: 3rem;
+  margin-bottom: 1.5rem;
+  font-weight: 800;
+  color: #3f56a1;
+  letter-spacing: -1px;
 `;
+
 const WordHeader = styled.div`
   display: flex;
   align-items: center;
   gap: 1rem;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
 `;
 
 const MeaningsContainer = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 0.8rem;
+  gap: 1rem;
 `;
 
 const MeaningItem = styled.div`
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 0.5rem 0;
+  padding: 0.75rem;
+  background: #f8fafc;
+  border-radius: 12px;
+  transition: all 0.3s;
+
+  &:hover {
+    background: #f0f9ff;
+    transform: translateX(8px);
+  }
 
   .number {
-    background: #3b82f6;
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
     color: white;
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: bold;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
   }
 
   .badge {
     background: #eff6ff;
     color: #1e40af;
-    padding: 0.3rem 0.8rem;
+    padding: 0.4rem 1rem;
     border-radius: 20px;
-    font-weight: 500;
-    border: 1px solid #bfdbfe;
+    font-weight: 600;
+    border: 2px solid #bfdbfe;
     font-size: 0.9rem;
     flex-shrink: 0;
   }
@@ -117,6 +151,7 @@ const MeaningItem = styled.div`
     color: #475569;
     font-size: 1.05rem;
     flex: 1;
+    font-weight: 500;
   }
 `;
 
@@ -126,11 +161,13 @@ const ExampleCard = styled(Card)`
   justify-content: space-between;
   align-items: flex-start;
   gap: 1rem;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: all 0.3s;
+  border: 2px solid transparent;
 
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateX(8px);
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.12);
+    border-color: #e0e7ff;
   }
 `;
 
@@ -139,40 +176,42 @@ const ExampleContent = styled.div`
 
   .meaning-badge {
     display: inline-block;
-    background: #3b82f6;
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
     color: white;
-    width: 22px;
-    height: 22px;
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
     text-align: center;
-    line-height: 22px;
+    line-height: 24px;
     font-size: 0.8rem;
     font-weight: bold;
-    margin-right: 0.5rem;
+    margin-right: 0.75rem;
     vertical-align: middle;
+    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
   }
 
   p {
-    line-height: 1.6;
-    margin-bottom: 0.5rem;
+    line-height: 1.8;
+    margin-bottom: 0.75rem;
   }
 
   .english {
     color: #1e40af;
-    font-weight: 500;
-    font-size: 1.05rem;
+    font-weight: 600;
+    font-size: 1.1rem;
   }
 
   .korean {
-    color: #666;
-    font-size: 0.95rem;
+    color: #64748b;
+    font-size: 1rem;
   }
 
   .highlight {
     background: linear-gradient(180deg, transparent 50%, #fef08a 50%);
-    font-weight: 600;
+    font-weight: 700;
     color: #1e40af;
-    padding: 0 2px;
+    padding: 0 4px;
+    border-radius: 3px;
   }
 `;
 
@@ -183,14 +222,23 @@ const SaveButton = styled(Button)`
 
 const RelatedWordsGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
 `;
 
 const RelatedWordCard = styled(Card) <{ type: "synonym" | "antonym" }>`
   border-left: 4px solid
     ${(props) => (props.type === "synonym" ? "#10b981" : "#ef4444")};
-  background: ${(props) => (props.type === "synonym" ? "#f0fdf4" : "#fef2f2")};
+  background: ${(props) => (props.type === "synonym" 
+    ? "#f0fdf4" 
+    : "#fef2f2")};
+  transition: all 0.3s;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px ${(props) => 
+      props.type === "synonym" ? "rgba(16, 185, 129, 0.2)" : "rgba(239, 68, 68, 0.2)"};
+  }
 
   &.empty {
     opacity: 0.6;
@@ -202,78 +250,87 @@ const RelatedWordCard = styled(Card) <{ type: "synonym" | "antonym" }>`
 const RelatedWordHeader = styled.div`
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.8rem;
-  color: #666;
-  font-size: 0.9rem;
-  font-weight: 600;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  color: #64748b;
+  font-size: 0.95rem;
+  font-weight: 700;
   text-transform: uppercase;
+  letter-spacing: 0.5px;
 `;
 
 const RelatedWordContent = styled.div`
   .word {
-    font-size: 1.3rem;
-    font-weight: bold;
-    color: #1e40af;
-    margin-bottom: 0.3rem;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #3f56a1;
+    margin-bottom: 0.5rem;
     display: flex;              
     align-items: center;       
-    gap: 0.5rem;
+    gap: 0.75rem;
   }
 
   .meta {
     display: flex;
     gap: 1rem;
     font-size: 0.9rem;
-    color: #666;
-    margin-bottom: 0.5rem;
+    color: #64748b;
+    margin-bottom: 0.75rem;
 
     span {
       background: white;
-      padding: 0.2rem 0.6rem;
-      border-radius: 12px;
+      padding: 0.3rem 0.8rem;
+      border-radius: 14px;
+      font-weight: 600;
+      border: 2px solid rgba(0, 0, 0, 0.05);
     }
   }
 
   .meaning {
-    color: #333;
-    font-size: 0.95rem;
+    color: #475569;
+    font-size: 1rem;
+    line-height: 1.6;
+    font-weight: 500;
   }
 `;
 
 const InvalidWordMessage = styled.div`
   background: #fef2f2;
-  border: 2px solid #fca5a5;
-  border-radius: 12px;
-  padding: 1.5rem;
+  border: 3px solid #fca5a5;
+  border-radius: 16px;
+  padding: 2.5rem;
   text-align: center;
   color: #991b1b;
+  box-shadow: 0 8px 24px rgba(239, 68, 68, 0.12);
 
   .icon {
-    font-size: 3rem;
-    margin-bottom: 1rem;
+    font-size: 4rem;
+    margin-bottom: 1.5rem;
   }
 
   h3 {
-    font-size: 1.2rem;
-    margin-bottom: 0.5rem;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
     color: #dc2626;
+    font-weight: 700;
   }
 
   p {
     color: #7f1d1d;
-    line-height: 1.6;
-    margin-bottom: 1rem;
+    line-height: 1.8;
+    margin-bottom: 1.5rem;
+    font-size: 1.05rem;
   }
 
   .suggestions {
-    font-size: 0.9rem;
+    font-size: 1rem;
     color: #991b1b;
-    margin-top: 1rem;
+    margin-top: 1.5rem;
 
     strong {
       display: block;
-      margin-bottom: 0.5rem;
+      margin-bottom: 1rem;
+      font-size: 1.1rem;
     }
 
     ul {
@@ -281,14 +338,22 @@ const InvalidWordMessage = styled.div`
       padding: 0;
       display: flex;
       flex-wrap: wrap;
-      gap: 0.5rem;
+      gap: 0.75rem;
       justify-content: center;
 
       li {
         background: white;
-        padding: 0.3rem 0.8rem;
-        border-radius: 8px;
-        border: 1px solid #fca5a5;
+        padding: 0.5rem 1.25rem;
+        border-radius: 20px;
+        border: 2px solid #fca5a5;
+        font-weight: 600;
+        transition: all 0.3s;
+
+        &:hover {
+          background: #fee2e2;
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+        }
       }
     }
   }
@@ -296,14 +361,18 @@ const InvalidWordMessage = styled.div`
 
 const PageDescription = styled.div`
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 2.5rem;
   color: #64748b;
-  font-size: 0.95rem;
-  line-height: 1.6;
+  font-size: 1.05rem;
+  line-height: 1.8;
+  background: #f8fafc;
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 2px solid #e2e8f0;
 
   .highlight {
     color: #3b82f6;
-    font-weight: 600;
+    font-weight: 700;
   }
 `;
 
@@ -319,7 +388,6 @@ export default function ExampleGenerator() {
   } | null>(null);
   const [savedWordId, setSavedWordId] = useState<number | null>(null);
 
-  // 영어 문자만 허용하는 함수
   const isEnglishOnly = (text: string): boolean => {
     return /^[a-zA-Z\s]*$/.test(text);
   };
@@ -327,7 +395,6 @@ export default function ExampleGenerator() {
   const handleWordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
 
-    // 영어와 공백만 허용
     if (isEnglishOnly(newValue) || newValue === "") {
       setWord(newValue);
       setError("");
@@ -345,13 +412,11 @@ export default function ExampleGenerator() {
       return;
     }
 
-    // 영어 검증
     if (!isEnglishOnly(trimmedWord)) {
       setError("영어만 입력 가능합니다.");
       return;
     }
 
-    // 공백 포함 여부 확인
     if (trimmedWord.includes(" ")) {
       setError("단어는 공백 없이 입력해주세요.");
       return;
@@ -368,7 +433,6 @@ export default function ExampleGenerator() {
     } catch (err: any) {
       const errorMessage = err.message || "예문 생성에 실패했습니다.";
 
-      // 유효하지 않은 단어인 경우
       if (errorMessage.includes("유효한 영어 단어가 아닙니다")) {
         setInvalidWord(true);
         setError(errorMessage);
@@ -383,7 +447,6 @@ export default function ExampleGenerator() {
     }
   };
 
-  // 단어 저장 (meanings 배열의 첫 번째 항목만 저장)
   const handleSaveWord = async () => {
     if (!data || !data.word.meanings || data.word.meanings.length === 0) return;
 
@@ -405,7 +468,6 @@ export default function ExampleGenerator() {
     }
   };
 
-  // 예문 저장 (개별)
   const handleSaveExample = async (example: Example, index: number) => {
     if (!data) return;
 
@@ -425,7 +487,6 @@ export default function ExampleGenerator() {
     }
   };
 
-  // 유의어/반의어 저장
   const handleSaveRelatedWord = async (type: 'synonym' | 'antonym') => {
     if (!data || !data.relatedWords) return;
 
@@ -452,7 +513,6 @@ export default function ExampleGenerator() {
   };
 
   const highlightWord = (text: string, targetWord: string) => {
-    // text가 undefined이거나 빈 값일 경우 처리
     if (!text || !targetWord) return text;
 
     const regex = new RegExp(`(\\b${targetWord}\\w*)`, "gi");
@@ -522,7 +582,6 @@ export default function ExampleGenerator() {
 
       {data && (
         <Results>
-          {/* 단어 정보 */}
           <Section>
             <WordInfoCard>
               <WordHeader>
@@ -539,24 +598,22 @@ export default function ExampleGenerator() {
                 ))}
               </MeaningsContainer>
               
-              {/* 단어 저장 버튼 */}
               <SaveButton
                 onClick={handleSaveWord}
                 disabled={saveLoading?.type === 'word'}
-                style={{ marginTop: '1rem', width: '100%' }}
+                style={{ marginTop: '1.5rem', width: '100%' }}
               >
-                {saveLoading?.type === 'word' ? '저장 중...' : '단어 저장'}
+                {saveLoading?.type === 'word' ? '저장 중...' : '💾 단어 저장'}
               </SaveButton>
             </WordInfoCard>
           </Section>
 
-          {/* 예문 */}
           <Section>
             <h2>예문</h2>
             {data.examples?.map((example, index) => (
               <ExampleCard key={index}>
                 <ExampleContent>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
                     <SpeakerButton text={example.english} size="small" />
                     <p className="english" style={{ margin: 0 }}>
                       {example?.english && data?.word?.original
@@ -571,17 +628,15 @@ export default function ExampleGenerator() {
                   variant="secondary"
                   disabled={saveLoading?.type === 'example' && saveLoading?.index === index}
                 >
-                  {saveLoading?.type === 'example' && saveLoading?.index === index ? '저장 중...' : '저장'}
+                  {saveLoading?.type === 'example' && saveLoading?.index === index ? '저장 중...' : '💾 저장'}
                 </SaveButton>
               </ExampleCard>
             ))}
           </Section>
 
-          {/* 관련 단어 */}
           <Section>
             <h2>관련 단어</h2>
             <RelatedWordsGrid>
-              {/* 유의어 */}
               {data.relatedWords?.synonym && (
                 <RelatedWordCard type="synonym">
                   <RelatedWordHeader>
@@ -591,7 +646,7 @@ export default function ExampleGenerator() {
                   <RelatedWordContent>
                     <div className="word">
                       {data.relatedWords.synonym.word}
-                      <SpeakerButton text={data.relatedWords.synonym.word} size="small" />  {/* ✅ 추가 */}
+                      <SpeakerButton text={data.relatedWords.synonym.word} size="small" />
                     </div>
                     <div className="meta">
                       <span>{data.relatedWords.synonym.partOfSpeech}</span>
@@ -604,14 +659,13 @@ export default function ExampleGenerator() {
                     onClick={() => handleSaveRelatedWord('synonym')}
                     variant="secondary"
                     disabled={saveLoading?.type === 'synonym'}
-                    style={{ marginTop: '0.75rem', width: '100%', padding: '0.5rem' }}
+                    style={{ marginTop: '1rem', width: '100%', padding: '0.5rem' }}
                   >
-                    {saveLoading?.type === 'synonym' ? '저장 중...' : '저장'}
+                    {saveLoading?.type === 'synonym' ? '저장 중...' : '💾 저장'}
                   </SaveButton>
                 </RelatedWordCard>
               )}
 
-              {/* 반의어 */}
               {data.relatedWords?.antonym && (
                 <RelatedWordCard type="antonym">
                   <RelatedWordHeader>
@@ -621,7 +675,7 @@ export default function ExampleGenerator() {
                   <RelatedWordContent>
                     <div className="word">
                       {data.relatedWords.antonym.word}
-                      <SpeakerButton text={data.relatedWords.antonym.word} size="small" />  {/* ✅ 추가 */}
+                      <SpeakerButton text={data.relatedWords.antonym.word} size="small" />
                     </div>
                     <div className="meta">
                       <span>{data.relatedWords.antonym.partOfSpeech}</span>
@@ -634,9 +688,9 @@ export default function ExampleGenerator() {
                     onClick={() => handleSaveRelatedWord('antonym')}
                     variant="secondary"
                     disabled={saveLoading?.type === 'antonym'}
-                    style={{ marginTop: '0.75rem', width: '100%', padding: '0.5rem' }}
+                    style={{ marginTop: '1rem', width: '100%', padding: '0.5rem' }}
                   >
-                    {saveLoading?.type === 'antonym' ? '저장 중...' : '저장'}
+                    {saveLoading?.type === 'antonym' ? '저장 중...' : '💾 저장'}
                   </SaveButton>
                 </RelatedWordCard>
               )}
