@@ -8,9 +8,10 @@ const LayoutWrapper = styled.div`
 `;
 
 const Nav = styled.nav`
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  padding: 1rem 0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: #2563eb;
+  padding: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 `;
 
 const NavContainer = styled.div`
@@ -20,93 +21,118 @@ const NavContainer = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
+  height: 64px;
 `;
 
 const LeftSection = styled.div`
   display: flex;
   align-items: center;
-  gap: 2.5rem;
+  gap: 3rem;
+  height: 100%;
 `;
 
 const Logo = styled(Link)`
   font-size: 1.5rem;
-  font-weight: bold;
+  font-weight: 700;
   color: white;
   text-decoration: none;
+  letter-spacing: -0.3px;
   
   &:hover {
     opacity: 0.9;
+    text-decoration: none;
   }
 `;
 
 const NavLinks = styled.div`
   display: flex;
-  gap: 0.25rem;
+  gap: 0;
   align-items: center;
+  height: 100%;
 `;
 
 const NavLink = styled(Link)<{ $active: boolean }>`
-  color: ${(props) => props.$active ? 'white' : 'rgba(255, 255, 255, 0.85)'};
+  color: ${(props) => props.$active ? 'white' : 'rgba(255, 255, 255, 0.75)'};
   text-decoration: none;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  font-size: 0.95rem;
-  font-weight: 500;
+  padding: 0 1.25rem;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  font-size: 1.1rem;
+  font-weight: ${(props) => (props.$active ? '600' : '500')};
   transition: all 0.2s ease;
-  background: ${(props) => (props.$active ? 'rgba(255, 255, 255, 0.2)' : 'transparent')};
+  position: relative;
 
   &:hover {
     color: white;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.08);
+    text-decoration: none;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: white;
+    transform: scaleX(${(props) => (props.$active ? '1' : '0')});
+    transition: transform 0.2s ease;
+  }
+
+  &:hover::after {
+    transform: scaleX(1);
   }
 `;
 
 const Main = styled.main`
-  min-height: calc(100vh - 80px);
+  min-height: calc(100vh - 64px);
 `;
 
 const UserSection = styled.div`
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 1.25rem;
 `;
 
 const UserName = styled.span`
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 0.9rem;
+  color: white;
+  font-size: 1.05rem;
+  font-weight: 500;
+  opacity: 0.9;
 `;
 
 const AuthButton = styled.button`
   color: white;
-  padding: 0.45rem 0.9rem;
+  padding: 0.5rem 1rem;
   border-radius: 6px;
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
   cursor: pointer;
-  font-size: 0.85rem;
+  font-size: 1.05rem;
   font-weight: 500;
   transition: all 0.2s ease;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.25);
   }
 `;
 
 const LoginLink = styled(Link)`
   color: white;
-  padding: 0.45rem 0.9rem;
+  padding: 0.5rem 1rem;
   border-radius: 6px;
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
   text-decoration: none;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   font-weight: 500;
   transition: all 0.2s ease;
+  display: inline-block;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.25);
   }
 `;
 
