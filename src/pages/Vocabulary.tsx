@@ -216,15 +216,14 @@ const WordFooter = styled.div`
 
 const ExampleCard = styled(Card)`
   padding: 2rem;
-  background: #f8fafc;
-  border-left: 3px solid #3b82f6;
+  background: white;
   display: flex;
   flex-direction: column;
   min-height: 140px;
   transition: all 0.3s;
 
   &:hover {
-    border-color: #3b82f6;
+    border-color: #e0e7ff;
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.08);
     transform: translateY(-2px);
   }
@@ -252,7 +251,6 @@ const ExampleContent = styled.div`
   .korean {
     color: #64748b;
     font-size: 1.05rem;
-    padding-left: 2rem;
     line-height: 1.6;
   }
 `;
