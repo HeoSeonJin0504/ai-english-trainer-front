@@ -139,11 +139,14 @@ const WordCard = styled(Card)`
   flex-direction: column;
   min-height: 140px;
   transition: all 0.3s;
+  position: relative;
+  z-index: 1;
 
   &:hover {
     border-color: #e0e7ff;
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.08);
     transform: translateY(-2px);
+    z-index: 2;
   }
 `;
 
@@ -220,11 +223,14 @@ const ExampleCard = styled(Card)`
   flex-direction: column;
   min-height: 140px;
   transition: all 0.3s;
+  position: relative;
+  z-index: 1;
 
   &:hover {
     border-color: #e0e7ff;
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.08);
     transform: translateY(-2px);
+    z-index: 2;
   }
 `;
 

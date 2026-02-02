@@ -9,6 +9,11 @@ interface SpeakerButtonProps {
   speed?: 'slow' | 'normal' | 'fast';
 }
 
+interface TTSSettings {
+  voice: 'male' | 'female';
+  speed: number;
+}
+
 const IconButton = styled.button<{ $size: string; $isPlaying: boolean }>`
   background: ${props => props.$isPlaying ? '#ef4444' : '#3b82f6'};
   color: white;
@@ -97,11 +102,28 @@ export function SpeakerButton({
 }: SpeakerButtonProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [useFallback, setUseFallback] = useState(false);
+  const [settings, setSettings] = useState<TTSSettings>({
+    voice: 'female',
+    speed: 1.0
+  });
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     checkTTSAvailability();
+    loadSettings();
   }, []);
+
+  // 설정 로드
+  const loadSettings = () => {
+    const savedSettings = localStorage.getItem('tts-settings');
+    if (savedSettings) {
+      try {
+        setSettings(JSON.parse(savedSettings));
+      } catch (e) {
+        console.error('Failed to load TTS settings:', e);
+      }
+    }
+  };
 
   const checkTTSAvailability = async () => {
     try {
@@ -114,20 +136,12 @@ export function SpeakerButton({
     }
   };
 
-  const getSpeedValue = (speed: 'slow' | 'normal' | 'fast'): number => {
-    switch (speed) {
-      case 'slow': return 0.75;
-      case 'fast': return 1.25;
-      default: return 1.0;
-    }
-  };
-
   const playWithWebSpeech = () => {
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = 'en-US';
-      utterance.rate = getSpeedValue(speed);
+      utterance.rate = settings.speed;
       
       utterance.onstart = () => setIsPlaying(true);
       utterance.onend = () => setIsPlaying(false);
@@ -141,23 +155,20 @@ export function SpeakerButton({
     try {
       setIsPlaying(true);
 
-      const response = await apiService.generateTTS(text, getSpeedValue(speed), 'female');
+      const response = await apiService.generateTTS(text, settings.speed, settings.voice);
 
       if (!response.success || !response.data) {
-        // TTS 서비스 불가 시 Web Speech API로 대체
         playWithWebSpeech();
         setUseFallback(true);
         return;
       }
 
-      // Base64 오디오 데이터를 Audio 객체로 재생
       const audio = new Audio(`data:${response.data.contentType};base64,${response.data.audio}`);
       audioRef.current = audio;
 
       audio.onended = () => setIsPlaying(false);
       audio.onerror = () => {
         setIsPlaying(false);
-        // 에러 발생 시 Web Speech API로 대체
         playWithWebSpeech();
         setUseFallback(true);
       };
@@ -165,7 +176,6 @@ export function SpeakerButton({
       await audio.play();
     } catch (error) {
       console.error('TTS 재생 실패:', error);
-      // 에러 발생 시 Web Speech API로 대체
       playWithWebSpeech();
       setUseFallback(true);
     }
@@ -183,6 +193,9 @@ export function SpeakerButton({
       setIsPlaying(false);
       return;
     }
+
+    // 최신 설정 로드
+    loadSettings();
 
     if (useFallback) {
       playWithWebSpeech();

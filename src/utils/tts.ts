@@ -33,14 +33,21 @@ const speakWithGoogle = async (
   onError?: () => void
 ): Promise<void> => {
   try {
+    // 전역 설정 가져오기
+    const savedVoice = localStorage.getItem('tts-voice') as 'male' | 'female' | null;
+    const savedSpeed = localStorage.getItem('tts-speed');
+    
+    const finalVoice = savedVoice || options.voice || 'female';
+    const finalSpeed = savedSpeed ? parseFloat(savedSpeed) : (options.rate || 0.9);
+
     const response = await apiService.generateTTS(
       text,
-      options.rate || 0.9,
-      options.voice || 'female'
+      finalSpeed,
+      finalVoice
     );
 
-    if (!response.success || !response.audio) {
-      throw new Error(response.error || 'TTS 생성 실패');
+    if (!response.success || !response.data?.audio) {
+      throw new Error('TTS 생성 실패');
     }
 
     if (audioElement) {
@@ -48,7 +55,7 @@ const speakWithGoogle = async (
       audioElement.src = '';
     }
 
-    audioElement = new Audio(`data:audio/mp3;base64,${response.audio}`);
+    audioElement = new Audio(`data:audio/mp3;base64,${response.data.audio}`);
     audioElement.volume = options.volume || 1;
     
     if (onEnd) {

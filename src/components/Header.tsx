@@ -1,7 +1,8 @@
-import { type ReactNode } from 'react';
+import { type ReactNode, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { apiService } from '../services/api';
+import { TTSSettingsModal } from './TTSSettingsModal';
 
 const LayoutWrapper = styled.div`
   min-height: 100vh;
@@ -136,6 +137,22 @@ const LoginLink = styled(Link)`
   }
 `;
 
+const SettingsButton = styled.button`
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  font-size: 1.3rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: white;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: scale(1.05);
+  }
+`;
+
 interface HeaderProps {
   children: ReactNode;
 }
@@ -145,6 +162,7 @@ export function Header({ children }: HeaderProps) {
   const navigate = useNavigate();
   const isLoggedIn = apiService.isLoggedIn();
   const user = apiService.getCurrentUser();
+  const [showTTSSettings, setShowTTSSettings] = useState(false);
 
   const navItems = [
     { path: '/example', label: '예문 생성' },
@@ -161,37 +179,49 @@ export function Header({ children }: HeaderProps) {
   };
 
   return (
-    <LayoutWrapper>
-      <Nav>
-        <NavContainer>
-          <LeftSection>
-            <Logo to="/">AI 영어 학습</Logo>
-            <NavLinks>
-              {navItems.map((item) => (
-                <NavLink
-                  key={item.path}
-                  to={item.path}
-                  $active={location.pathname === item.path}
-                >
-                  {item.label}
-                </NavLink>
-              ))}
-            </NavLinks>
-          </LeftSection>
+    <>
+      <LayoutWrapper>
+        <Nav>
+          <NavContainer>
+            <LeftSection>
+              <Logo to="/">AI 영어 학습</Logo>
+              <NavLinks>
+                {navItems.map((item) => (
+                  <NavLink
+                    key={item.path}
+                    to={item.path}
+                    $active={location.pathname === item.path}
+                  >
+                    {item.label}
+                  </NavLink>
+                ))}
+              </NavLinks>
+            </LeftSection>
 
-          <UserSection>
-            {isLoggedIn && user ? (
-              <>
-                <UserName>{user.username}님</UserName>
-                <AuthButton onClick={handleLogout}>로그아웃</AuthButton>
-              </>
-            ) : (
-              <LoginLink to="/login">로그인</LoginLink>
-            )}
-          </UserSection>
-        </NavContainer>
-      </Nav>
-      <Main>{children}</Main>
-    </LayoutWrapper>
+            <UserSection>
+              {isLoggedIn && user ? (
+                <>
+                  <UserName>{user.username}님</UserName>
+                  <AuthButton onClick={handleLogout}>로그아웃</AuthButton>
+                  <SettingsButton 
+                    onClick={() => setShowTTSSettings(true)}
+                    title="TTS 설정"
+                  >
+                    ⚙️
+                  </SettingsButton>
+                </>
+              ) : (
+                <LoginLink to="/login">로그인</LoginLink>
+              )}
+            </UserSection>
+          </NavContainer>
+        </Nav>
+        <Main>{children}</Main>
+      </LayoutWrapper>
+
+      {showTTSSettings && (
+        <TTSSettingsModal onClose={() => setShowTTSSettings(false)} />
+      )}
+    </>
   );
 }
