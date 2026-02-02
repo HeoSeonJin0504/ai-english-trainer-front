@@ -217,7 +217,7 @@ export function TTSSettingsModal({ onClose }: TTSSettingsModalProps) {
   };
 
   const handlePreview = () => {
-    const text = "Hello! This is a test of the text to speech settings.";
+    const text = "Hello! Welcome to AI English Trainer!";
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'en-US';
     utterance.rate = speed;
