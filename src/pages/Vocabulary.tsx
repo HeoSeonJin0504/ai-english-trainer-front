@@ -64,17 +64,10 @@ const SearchInfo = styled.div`
     }
   }
 
-  .clear {
-    color: #3b82f6;
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 0.9rem;
-    text-decoration: underline;
-
-    &:hover {
-      color: #2563eb;
-    }
+  .actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
   }
 `;
 
@@ -97,6 +90,12 @@ const Items = styled.div`
 const DeleteButton = styled(Button)`
   padding: 0.5rem 1rem;
   font-size: 0.9rem;
+  flex-shrink: 0;
+`;
+
+const ToggleButton = styled(Button)`
+  padding: 0.4rem 0.9rem;
+  font-size: 0.85rem;
   flex-shrink: 0;
 `;
 
@@ -310,10 +309,14 @@ export default function Vocabulary() {
   const [examplesCount, setExamplesCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showAllMeanings, setShowAllMeanings] = useState(false);
+  const [visibleMeanings, setVisibleMeanings] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     loadData();
     loadCounts();
+    setShowAllMeanings(false);
+    setVisibleMeanings(new Set());
   }, [activeTab]);
 
   const loadData = async () => {
@@ -385,6 +388,24 @@ export default function Vocabulary() {
     }
   };
 
+  const toggleAllMeanings = () => {
+    setShowAllMeanings(!showAllMeanings);
+  };
+
+  const toggleMeaning = (id: number) => {
+    const newVisible = new Set(visibleMeanings);
+    if (newVisible.has(id)) {
+      newVisible.delete(id);
+    } else {
+      newVisible.add(id);
+    }
+    setVisibleMeanings(newVisible);
+  };
+
+  const isMeaningVisible = (id: number) => {
+    return showAllMeanings || visibleMeanings.has(id);
+  };
+
   const handleDeleteWord = async (id: number) => {
     if (confirm('정말 삭제하시겠습니까?')) {
       try {
@@ -445,9 +466,26 @@ export default function Vocabulary() {
               {activeTab === 'words' ? filteredWords.length : filteredExamples.length}
             </strong>개
           </div>
-          <button className="clear" onClick={handleClearSearch}>
-            검색 초기화
-          </button>
+          <div className="actions">
+            <ToggleButton onClick={handleClearSearch} variant="secondary">
+              검색 초기화
+            </ToggleButton>
+          </div>
+        </SearchInfo>
+      )}
+
+      {!searchKeyword && ((activeTab === 'words' && filteredWords.length > 0) || (activeTab === 'examples' && filteredExamples.length > 0)) && (
+        <SearchInfo>
+          <div className="count">
+            전체: <strong>
+              {activeTab === 'words' ? filteredWords.length : filteredExamples.length}
+            </strong>개
+          </div>
+          <div className="actions">
+            <ToggleButton onClick={toggleAllMeanings}>
+              {showAllMeanings ? '모든 뜻 숨기기' : '모든 뜻 보기'}
+            </ToggleButton>
+          </div>
         </SearchInfo>
       )}
 
@@ -480,10 +518,12 @@ export default function Vocabulary() {
                         <div className="word-title">{word.word}</div>
                         <SpeakerButton text={word.word} size="small" />
                       </div>
-                      <div className="word-meta">
-                        <span className="badge">{word.partOfSpeech}</span>
-                        <span className="meaning">{word.meaning}</span>
-                      </div>
+                      {isMeaningVisible(word.id) && (
+                        <div className="word-meta">
+                          <span className="badge">{word.partOfSpeech}</span>
+                          <span className="meaning">{word.meaning}</span>
+                        </div>
+                      )}
                     </WordContent>
                     <WordFooter>
                       <div className="date-info">
@@ -498,12 +538,17 @@ export default function Vocabulary() {
                           })}
                         </span>
                       </div>
-                      <DeleteButton 
-                        onClick={() => handleDeleteWord(word.id)}
-                        variant="danger"
-                      >
-                        삭제
-                      </DeleteButton>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <ToggleButton onClick={() => toggleMeaning(word.id)}>
+                          {isMeaningVisible(word.id) ? '뜻 숨기기' : '뜻 보기'}
+                        </ToggleButton>
+                        <DeleteButton 
+                          onClick={() => handleDeleteWord(word.id)}
+                          variant="danger"
+                        >
+                          삭제
+                        </DeleteButton>
+                      </div>
                     </WordFooter>
                   </WordCard>
                 ))}
@@ -533,7 +578,9 @@ export default function Vocabulary() {
                         <div className="english">{example.english}</div>
                         <SpeakerButton text={example.english} size="small" />
                       </div>
-                      <div className="korean">{example.korean}</div>
+                      {isMeaningVisible(example.id) && (
+                        <div className="korean">{example.korean}</div>
+                      )}
                     </ExampleContent>
                     <ExampleFooter>
                       <div className="left-info">
@@ -555,12 +602,17 @@ export default function Vocabulary() {
                           </span>
                         </div>
                       </div>
-                      <DeleteButton 
-                        onClick={() => handleDeleteExample(example.id)}
-                        variant="danger"
-                      >
-                        삭제
-                      </DeleteButton>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <ToggleButton onClick={() => toggleMeaning(example.id)}>
+                          {isMeaningVisible(example.id) ? '뜻 숨기기' : '뜻 보기'}
+                        </ToggleButton>
+                        <DeleteButton 
+                          onClick={() => handleDeleteExample(example.id)}
+                          variant="danger"
+                        >
+                          삭제
+                        </DeleteButton>
+                      </div>
                     </ExampleFooter>
                   </ExampleCard>
                 ))}
