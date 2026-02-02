@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
-import styled from 'styled-components';
-import { Button } from './Button';
+import { useState, useEffect } from "react";
+import styled from "styled-components";
+import { Button } from "./Button";
+import { apiService } from "../services/api";
 
 const Overlay = styled.div`
   position: fixed;
@@ -59,9 +60,9 @@ const VoiceOptions = styled.div`
 
 const VoiceButton = styled.button<{ $active: boolean }>`
   padding: 1rem;
-  border: 2px solid ${props => props.$active ? '#3b82f6' : '#e2e8f0'};
-  background: ${props => props.$active ? '#3b82f6' : 'white'};
-  color: ${props => props.$active ? 'white' : '#64748b'};
+  border: 2px solid ${(props) => (props.$active ? "#3b82f6" : "#e2e8f0")};
+  background: ${(props) => (props.$active ? "#3b82f6" : "white")};
+  color: ${(props) => (props.$active ? "white" : "#64748b")};
   border-radius: 6px;
   font-weight: 600;
   cursor: pointer;
@@ -74,7 +75,9 @@ const VoiceButton = styled.button<{ $active: boolean }>`
 
   &:hover {
     border-color: #3b82f6;
-    ${props => !props.$active && `
+    ${(props) =>
+      !props.$active &&
+      `
       background: #f1f5f9;
       color: #3b82f6;
     `}
@@ -183,7 +186,7 @@ const CancelButton = styled(Button)`
 
 const SaveButton = styled(Button)`
   background: #3b82f6;
-  
+
   &:hover {
     background: #2563eb;
   }
@@ -194,36 +197,60 @@ interface TTSSettingsModalProps {
 }
 
 export function TTSSettingsModal({ onClose }: TTSSettingsModalProps) {
-  const [voice, setVoice] = useState<'male' | 'female'>('female');
+  const [voice, setVoice] = useState<"male" | "female">("female");
   const [speed, setSpeed] = useState(1.0);
 
   useEffect(() => {
-    const savedSettings = localStorage.getItem('tts-settings');
+    const savedSettings = localStorage.getItem("tts-settings");
     if (savedSettings) {
       try {
         const settings = JSON.parse(savedSettings);
-        setVoice(settings.voice || 'female');
+        setVoice(settings.voice || "female");
         setSpeed(settings.speed || 1.0);
       } catch (e) {
-        console.error('Failed to load TTS settings:', e);
+        console.error("Failed to load TTS settings:", e);
       }
     }
   }, []);
-
   const handleSave = () => {
-    localStorage.setItem('tts-settings', JSON.stringify({ voice, speed }));
-    alert('TTS 설정이 저장되었습니다!');
+    localStorage.setItem("tts-settings", JSON.stringify({ voice, speed }));
+
+    window.dispatchEvent(new Event("tts-settings-changed"));
+
+    alert("TTS 설정이 저장되었습니다!");
     onClose();
   };
 
-  const handlePreview = () => {
+  const handlePreview = async () => {
     const text = "Hello! Welcome to AI English Trainer!";
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'en-US';
-    utterance.rate = speed;
-    
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(utterance);
+
+    try {
+      // Google TTS로 미리듣기 시도
+      const response = await apiService.generateTTS(text, speed, voice);
+
+      if (response.success && response.data) {
+        const audio = new Audio(
+          `data:${response.data.contentType};base64,${response.data.audio}`,
+        );
+        audio.play();
+      } else {
+        // 실패 시 Web Speech API 사용
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = "en-US";
+        utterance.rate = speed;
+
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utterance);
+      }
+    } catch (error) {
+      // 에러 시 Web Speech API 사용
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "en-US";
+      utterance.rate = speed;
+
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(utterance);
+    }
   };
 
   return (
@@ -237,16 +264,16 @@ export function TTSSettingsModal({ onClose }: TTSSettingsModalProps) {
         <SettingGroup>
           <Label>음성 유형</Label>
           <VoiceOptions>
-            <VoiceButton 
-              $active={voice === 'female'} 
-              onClick={() => setVoice('female')}
+            <VoiceButton
+              $active={voice === "female"}
+              onClick={() => setVoice("female")}
             >
               <span>👩</span>
               <span>여성</span>
             </VoiceButton>
-            <VoiceButton 
-              $active={voice === 'male'} 
-              onClick={() => setVoice('male')}
+            <VoiceButton
+              $active={voice === "male"}
+              onClick={() => setVoice("male")}
             >
               <span>👨</span>
               <span>남성</span>
@@ -271,18 +298,12 @@ export function TTSSettingsModal({ onClose }: TTSSettingsModalProps) {
               <span>2.0x</span>
             </SpeedDisplay>
           </SpeedSlider>
-          <PreviewButton onClick={handlePreview}>
-            🎧 미리듣기
-          </PreviewButton>
+          <PreviewButton onClick={handlePreview}>🎧 미리듣기</PreviewButton>
         </SettingGroup>
 
         <ButtonGroup>
-          <CancelButton onClick={onClose}>
-            취소
-          </CancelButton>
-          <SaveButton onClick={handleSave}>
-            저장
-          </SaveButton>
+          <CancelButton onClick={onClose}>취소</CancelButton>
+          <SaveButton onClick={handleSave}>저장</SaveButton>
         </ButtonGroup>
       </Modal>
     </Overlay>

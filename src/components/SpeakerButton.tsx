@@ -1,36 +1,42 @@
-import styled from 'styled-components';
-import { useState, useEffect, useRef } from 'react';
-import { apiService } from '../services/api';
+import styled from "styled-components";
+import { useState, useEffect, useRef } from "react";
+import { apiService } from "../services/api";
 
 interface SpeakerButtonProps {
   text: string;
-  size?: 'small' | 'medium' | 'large';
-  variant?: 'icon' | 'text';
-  speed?: 'slow' | 'normal' | 'fast';
+  size?: "small" | "medium" | "large";
+  variant?: "icon" | "text";
+  speed?: "slow" | "normal" | "fast";
 }
 
 interface TTSSettings {
-  voice: 'male' | 'female';
+  voice: "male" | "female";
   speed: number;
 }
 
 const IconButton = styled.button<{ $size: string; $isPlaying: boolean }>`
-  background: ${props => props.$isPlaying ? '#ef4444' : '#3b82f6'};
+  background: ${(props) => (props.$isPlaying ? "#ef4444" : "#3b82f6")};
   color: white;
   border: none;
   border-radius: 50%;
-  width: ${props => {
-    switch(props.$size) {
-      case 'small': return '28px';
-      case 'large': return '48px';
-      default: return '40px';
+  width: ${(props) => {
+    switch (props.$size) {
+      case "small":
+        return "28px";
+      case "large":
+        return "48px";
+      default:
+        return "40px";
     }
   }};
-  height: ${props => {
-    switch(props.$size) {
-      case 'small': return '28px';
-      case 'large': return '48px';
-      default: return '40px';
+  height: ${(props) => {
+    switch (props.$size) {
+      case "small":
+        return "28px";
+      case "large":
+        return "48px";
+      default:
+        return "40px";
     }
   }};
   display: flex;
@@ -38,17 +44,20 @@ const IconButton = styled.button<{ $size: string; $isPlaying: boolean }>`
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s;
-  font-size: ${props => {
-    switch(props.$size) {
-      case 'small': return '0.75rem';
-      case 'large': return '1.3rem';
-      default: return '1.1rem';
+  font-size: ${(props) => {
+    switch (props.$size) {
+      case "small":
+        return "0.75rem";
+      case "large":
+        return "1.3rem";
+      default:
+        return "1.1rem";
     }
   }};
   flex-shrink: 0;
 
   &:hover {
-    background: ${props => props.$isPlaying ? '#dc2626' : '#2563eb'};
+    background: ${(props) => (props.$isPlaying ? "#dc2626" : "#2563eb")};
     transform: scale(1.05);
   }
 
@@ -64,9 +73,9 @@ const IconButton = styled.button<{ $size: string; $isPlaying: boolean }>`
 `;
 
 const TextButton = styled.button<{ $isPlaying: boolean }>`
-  background: ${props => props.$isPlaying ? '#fee2e2' : '#eff6ff'};
-  color: ${props => props.$isPlaying ? '#dc2626' : '#1e40af'};
-  border: 2px solid ${props => props.$isPlaying ? '#ef4444' : '#3b82f6'};
+  background: ${(props) => (props.$isPlaying ? "#fee2e2" : "#eff6ff")};
+  color: ${(props) => (props.$isPlaying ? "#dc2626" : "#1e40af")};
+  border: 2px solid ${(props) => (props.$isPlaying ? "#ef4444" : "#3b82f6")};
   padding: 0.5rem 1rem;
   border-radius: 8px;
   font-weight: 600;
@@ -77,7 +86,7 @@ const TextButton = styled.button<{ $isPlaying: boolean }>`
   gap: 0.5rem;
 
   &:hover {
-    background: ${props => props.$isPlaying ? '#fecaca' : '#dbeafe'};
+    background: ${(props) => (props.$isPlaying ? "#fecaca" : "#dbeafe")};
     transform: translateY(-1px);
   }
 
@@ -96,31 +105,45 @@ const TextButton = styled.button<{ $isPlaying: boolean }>`
 
 export function SpeakerButton({
   text,
-  size = 'medium',
-  variant = 'icon',
-  speed = 'normal'
+  size = "medium",
+  variant = "icon",
+  speed = "normal",
 }: SpeakerButtonProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [useFallback, setUseFallback] = useState(false);
   const [settings, setSettings] = useState<TTSSettings>({
-    voice: 'female',
-    speed: 1.0
+    voice: "female",
+    speed: 1.0,
   });
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     checkTTSAvailability();
     loadSettings();
-  }, []);
 
+    // 설정 변경 이벤트 리스너 추가
+    const handleStorageChange = () => {
+      loadSettings();
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+
+    // 커스텀 이벤트로 같은 탭에서의 변경도 감지
+    window.addEventListener("tts-settings-changed", handleStorageChange);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("tts-settings-changed", handleStorageChange);
+    };
+  }, []);
   // 설정 로드
   const loadSettings = () => {
-    const savedSettings = localStorage.getItem('tts-settings');
+    const savedSettings = localStorage.getItem("tts-settings");
     if (savedSettings) {
       try {
         setSettings(JSON.parse(savedSettings));
       } catch (e) {
-        console.error('Failed to load TTS settings:', e);
+        console.error("Failed to load TTS settings:", e);
       }
     }
   };
@@ -137,16 +160,16 @@ export function SpeakerButton({
   };
 
   const playWithWebSpeech = () => {
-    if ('speechSynthesis' in window) {
+    if ("speechSynthesis" in window) {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'en-US';
+      utterance.lang = "en-US";
       utterance.rate = settings.speed;
-      
+
       utterance.onstart = () => setIsPlaying(true);
       utterance.onend = () => setIsPlaying(false);
       utterance.onerror = () => setIsPlaying(false);
-      
+
       window.speechSynthesis.speak(utterance);
     }
   };
@@ -155,7 +178,11 @@ export function SpeakerButton({
     try {
       setIsPlaying(true);
 
-      const response = await apiService.generateTTS(text, settings.speed, settings.voice);
+      const response = await apiService.generateTTS(
+        text,
+        settings.speed,
+        settings.voice,
+      );
 
       if (!response.success || !response.data) {
         playWithWebSpeech();
@@ -163,7 +190,9 @@ export function SpeakerButton({
         return;
       }
 
-      const audio = new Audio(`data:${response.data.contentType};base64,${response.data.audio}`);
+      const audio = new Audio(
+        `data:${response.data.contentType};base64,${response.data.audio}`,
+      );
       audioRef.current = audio;
 
       audio.onended = () => setIsPlaying(false);
@@ -175,7 +204,7 @@ export function SpeakerButton({
 
       await audio.play();
     } catch (error) {
-      console.error('TTS 재생 실패:', error);
+      console.error("TTS 재생 실패:", error);
       playWithWebSpeech();
       setUseFallback(true);
     }
@@ -187,15 +216,12 @@ export function SpeakerButton({
         audioRef.current.pause();
         audioRef.current.currentTime = 0;
       }
-      if ('speechSynthesis' in window) {
+      if ("speechSynthesis" in window) {
         window.speechSynthesis.cancel();
       }
       setIsPlaying(false);
       return;
     }
-
-    // 최신 설정 로드
-    loadSettings();
 
     if (useFallback) {
       playWithWebSpeech();
@@ -204,16 +230,16 @@ export function SpeakerButton({
     }
   };
 
-  if (variant === 'text') {
+  if (variant === "text") {
     return (
-      <TextButton 
-        onClick={handleClick} 
+      <TextButton
+        onClick={handleClick}
         $isPlaying={isPlaying}
         disabled={!text.trim()}
-        title={isPlaying ? '중지' : '발음 듣기'}
+        title={isPlaying ? "중지" : "발음 듣기"}
       >
-        <span>{isPlaying ? '⏸️' : '🔊'}</span>
-        <span>{isPlaying ? '중지' : '발음 듣기'}</span>
+        <span>{isPlaying ? "⏸️" : "🔊"}</span>
+        <span>{isPlaying ? "중지" : "발음 듣기"}</span>
       </TextButton>
     );
   }
@@ -224,9 +250,9 @@ export function SpeakerButton({
       $size={size}
       $isPlaying={isPlaying}
       disabled={!text.trim()}
-      title={isPlaying ? '중지' : '발음 듣기'}
+      title={isPlaying ? "중지" : "발음 듣기"}
     >
-      {isPlaying ? '⏸️' : '🔊'}
+      {isPlaying ? "⏸️" : "🔊"}
     </IconButton>
   );
 }
