@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -307,6 +307,56 @@ export interface TTSStatusResponse {
     message: string;
   };
   message?: string;
+}
+
+// 챗봇 관련 타입
+export interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+export interface ChatMessageRequest {
+  message: string;
+  conversationId: string | null;
+}
+
+export interface ChatMessageResponse {
+  message: string;
+  conversationId: string;
+  suggestions: string[];
+  timestamp: string;
+}
+
+export interface ConversationSession {
+  conversationId: string;
+  preview: string;
+  messageCount: number;
+  startedAt: string;
+  lastActivity: string;
+}
+
+export interface ConversationHistory {
+  conversationId: string;
+  messages: ChatMessage[];
+  startedAt: string;
+  lastActivity: string;
+}
+
+// 챗봇 에러 응답 타입
+export interface ChatErrorResponse {
+  error: string;
+}
+
+// 챗봇 성공 응답 타입
+export interface ChatSuccessResponse<T> {
+  success: true;
+  data: T;
+}
+
+// 챗봇 삭제 응답 타입
+export interface ChatDeleteResponse {
+  success: true;
+  message: string;
 }
 
 // apiService
@@ -764,6 +814,67 @@ export const apiService = {
       return response.data.data;
     } catch (error: any) {
       throw new Error(error.response?.data?.message || '영작 문제 개수 조회에 실패했습니다.');
+    }
+  },
+
+  // 챗봇 메시지 전송
+  async sendChatMessage(message: string, conversationId: string | null): Promise<ChatMessageResponse> {
+    try {
+      const response = await apiClient.post<ChatSuccessResponse<ChatMessageResponse>>('/chat/message', {
+        message,
+        conversationId
+      });
+      return response.data.data;
+    } catch (error: any) {
+      if (error.response?.status === 400) {
+        const errorMsg = error.response?.data?.error;
+        if (errorMsg === 'Message is required') {
+          throw new Error('메시지를 입력해주세요.');
+        }
+        if (errorMsg === 'Message is too long (max 1000 characters)') {
+          throw new Error('메시지가 너무 깁니다 (최대 1000자)');
+        }
+        throw new Error(errorMsg || '메시지를 입력해주세요.');
+      }
+      if (error.response?.status === 500) {
+        throw new Error('챗봇 응답 생성에 실패했습니다. 잠시 후 다시 시도해주세요.');
+      }
+      throw new Error(error.response?.data?.error || '메시지 전송에 실패했습니다.');
+    }
+  },
+
+  // 대화 목록 조회
+  async getChatConversations(): Promise<ConversationSession[]> {
+    try {
+      const response = await apiClient.get<ChatSuccessResponse<ConversationSession[]>>('/chat/conversations');
+      return response.data.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.error || '대화 목록을 불러오는데 실패했습니다.');
+    }
+  },
+
+  // 대화 히스토리 조회
+  async getChatHistory(conversationId: string): Promise<ConversationHistory> {
+    try {
+      const response = await apiClient.get<ChatSuccessResponse<ConversationHistory>>(`/chat/history/${conversationId}`);
+      return response.data.data;
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        throw new Error('대화를 찾을 수 없습니다.');
+      }
+      throw new Error(error.response?.data?.error || '대화 히스토리를 불러오는데 실패했습니다.');
+    }
+  },
+
+  // 대화 삭제
+  async deleteChatConversation(conversationId: string): Promise<void> {
+    try {
+      await apiClient.delete<ChatDeleteResponse>(`/chat/${conversationId}`);
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        throw new Error('대화를 찾을 수 없습니다.');
+      }
+      throw new Error(error.response?.data?.error || '대화 삭제에 실패했습니다.');
     }
   },
 };

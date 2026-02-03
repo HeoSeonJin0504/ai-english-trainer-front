@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { Home, ExampleGenerator, WritingProblem, Vocabulary, MyQuestions, Login, Signup } from './pages';
 import { Header } from './components/Header';
+import { Chatbot } from './components/Chatbot';
 import { apiService } from './services/api';
 
 // ✅ 인증 필요한 라우트 보호
@@ -84,6 +85,8 @@ function App() {
           
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        
+        {apiService.isLoggedIn() && <Chatbot />}
       </Header>
     </BrowserRouter>
   );
