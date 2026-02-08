@@ -13,6 +13,23 @@ AI 기반 영어 학습 플랫폼의 프론트엔드입니다.
 - Google Cloud TTS 및 Web Speech API 이중화 음성 재생
 - 단어장 및 문제 저장 관리
 
+## 주요 화면
+
+### 예문 생성기
+![예문 생성기](./screenshots/example-generator.png)
+
+### 토익 문제 생성
+![토익 문제](./screenshots/toeic-problem.png)
+
+### 영작 문제 생성
+![영작 채점](./screenshots/writing-grading.png)
+
+### 단어장
+![단어장](./screenshots/word.png)
+
+### 저장된 문제
+![단어장](./screenshots/problem.png)
+
 ## 🛠️ 기술 스택
 - **Framework**: React 19
 - **Language**: TypeScript
