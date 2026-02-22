@@ -27,6 +27,10 @@ const Container = styled.div`
   margin: 0 auto;
   padding: 3rem 2rem;
   animation: ${fadeIn} 0.6s ease-out;
+
+  @media (max-width: 768px) {
+    padding: 2rem 1rem;
+  }
 `;
 
 const Header = styled.header`
@@ -50,11 +54,13 @@ const Header = styled.header`
     font-size: 3rem;
     margin-bottom: 1.25rem;
     margin-top: 1.5rem;
-
     color: #3f56a1;
-
     font-weight: 800;
     letter-spacing: -0.5px;
+
+    @media (max-width: 768px) {
+      font-size: 2rem;
+    }
   }
 
   p {
@@ -63,6 +69,14 @@ const Header = styled.header`
     max-width: 600px;
     margin: 0 auto;
     line-height: 1.7;
+
+    @media (max-width: 768px) {
+      font-size: 1rem;
+    }
+  }
+
+  @media (max-width: 768px) {
+    margin-bottom: 2.5rem;
   }
 `;
 
@@ -71,6 +85,11 @@ const Features = styled.div`
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 2.5rem;
   margin-top: 2rem;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
 `;
 
 const IconWrapper = styled.div`
