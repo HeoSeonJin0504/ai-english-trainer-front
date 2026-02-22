@@ -1,8 +1,13 @@
 import { type ReactNode, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import styled from 'styled-components';
+import styled, { keyframes, css } from 'styled-components';
 import { apiService } from '../services/api';
 import { TTSSettingsModal } from './TTSSettingsModal';
+
+const slideDown = keyframes`
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+`;
 
 const LayoutWrapper = styled.div`
   min-height: 100vh;
@@ -13,6 +18,8 @@ const Nav = styled.nav`
   padding: 0;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+  z-index: 100;
 `;
 
 const NavContainer = styled.div`
@@ -23,6 +30,11 @@ const NavContainer = styled.div`
   justify-content: space-between;
   align-items: center;
   height: 70px;
+
+  @media (max-width: 768px) {
+    padding: 0 1rem;
+    height: 60px;
+  }
 `;
 
 const LeftSection = styled.div`
@@ -30,6 +42,10 @@ const LeftSection = styled.div`
   align-items: center;
   gap: 3rem;
   height: 100%;
+
+  @media (max-width: 768px) {
+    gap: 0;
+  }
 `;
 
 const Logo = styled(Link)`
@@ -43,6 +59,10 @@ const Logo = styled(Link)`
     opacity: 0.9;
     text-decoration: none;
   }
+
+  @media (max-width: 768px) {
+    font-size: 1.25rem;
+  }
 `;
 
 const NavLinks = styled.div`
@@ -50,6 +70,10 @@ const NavLinks = styled.div`
   gap: 0;
   align-items: center;
   height: 100%;
+
+  @media (max-width: 768px) {
+    display: none;
+  }
 `;
 
 const NavLink = styled(Link)<{ $active: boolean }>`
@@ -87,14 +111,127 @@ const NavLink = styled(Link)<{ $active: boolean }>`
   }
 `;
 
+/* ── Mobile Menu ── */
+const HamburgerButton = styled.button`
+  display: none;
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  cursor: pointer;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  transition: background 0.2s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.25);
+  }
+
+  @media (max-width: 768px) {
+    display: flex;
+  }
+`;
+
+const HamburgerLine = styled.span<{ $open: boolean; $pos: 'top' | 'mid' | 'bot' }>`
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: white;
+  border-radius: 2px;
+  transition: all 0.25s ease;
+
+  ${({ $open, $pos }) =>
+    $open &&
+    $pos === 'top' &&
+    css`transform: translateY(7px) rotate(45deg);`}
+  ${({ $open, $pos }) =>
+    $open && $pos === 'mid' && css`opacity: 0; transform: scaleX(0);`}
+  ${({ $open, $pos }) =>
+    $open &&
+    $pos === 'bot' &&
+    css`transform: translateY(-7px) rotate(-45deg);`}
+`;
+
+const MobileMenu = styled.div<{ $open: boolean }>`
+  display: none;
+  
+  @media (max-width: 768px) {
+    display: ${({ $open }) => ($open ? 'block' : 'none')};
+    position: absolute;
+    top: 60px;
+    left: 0;
+    right: 0;
+    background: #1d4ed8;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    animation: ${slideDown} 0.2s ease-out;
+    z-index: 99;
+  }
+`;
+
+const MobileNavLink = styled(Link)<{ $active: boolean }>`
+  display: flex;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  color: ${({ $active }) => ($active ? 'white' : 'rgba(255,255,255,0.8)')};
+  font-weight: ${({ $active }) => ($active ? '700' : '500')};
+  font-size: 1rem;
+  text-decoration: none;
+  border-left: 4px solid ${({ $active }) => ($active ? 'white' : 'transparent')};
+  background: ${({ $active }) => ($active ? 'rgba(255,255,255,0.1)' : 'transparent')};
+  transition: all 0.2s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: white;
+    text-decoration: none;
+  }
+`;
+
+const MobileDivider = styled.div`
+  height: 1px;
+  background: rgba(255, 255, 255, 0.15);
+  margin: 0 1.5rem;
+`;
+
+const MobileUserSection = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+`;
+
+const MobileUserName = styled.span`
+  color: white;
+  font-size: 0.95rem;
+  font-weight: 600;
+`;
+
+const MobileButtons = styled.div`
+  display: flex;
+  gap: 0.5rem;
+`;
+/* ── End Mobile Menu ── */
+
 const Main = styled.main`
-  min-height: calc(100vh - 64px);
+  min-height: calc(100vh - 70px);
+
+  @media (max-width: 768px) {
+    min-height: calc(100vh - 60px);
+  }
 `;
 
 const UserSection = styled.div`
   display: flex;
   align-items: center;
   gap: 1.25rem;
+
+  @media (max-width: 768px) {
+    display: none;
+  }
 `;
 
 const UserName = styled.span`
@@ -163,6 +300,7 @@ export function Header({ children }: HeaderProps) {
   const isLoggedIn = apiService.isLoggedIn();
   const user = apiService.getCurrentUser();
   const [showTTSSettings, setShowTTSSettings] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const navItems = [
     { path: '/example', label: '예문 생성' },
@@ -178,13 +316,15 @@ export function Header({ children }: HeaderProps) {
     }
   };
 
+  const handleNavClick = () => setMenuOpen(false);
+
   return (
     <>
       <LayoutWrapper>
         <Nav>
           <NavContainer>
             <LeftSection>
-              <Logo to="/">AI 영어 학습</Logo>
+              <Logo to="/" onClick={handleNavClick}>AI 영어 학습</Logo>
               <NavLinks>
                 {navItems.map((item) => (
                   <NavLink
@@ -198,6 +338,7 @@ export function Header({ children }: HeaderProps) {
               </NavLinks>
             </LeftSection>
 
+            {/* Desktop */}
             <UserSection>
               {isLoggedIn && user ? (
                 <>
@@ -214,7 +355,52 @@ export function Header({ children }: HeaderProps) {
                 <LoginLink to="/login">로그인</LoginLink>
               )}
             </UserSection>
+
+            {/* Mobile hamburger */}
+            <HamburgerButton
+              onClick={() => setMenuOpen((v) => !v)}
+              aria-label="메뉴 열기"
+            >
+              <HamburgerLine $open={menuOpen} $pos="top" />
+              <HamburgerLine $open={menuOpen} $pos="mid" />
+              <HamburgerLine $open={menuOpen} $pos="bot" />
+            </HamburgerButton>
           </NavContainer>
+
+          {/* Mobile dropdown */}
+          <MobileMenu $open={menuOpen}>
+            {navItems.map((item) => (
+              <MobileNavLink
+                key={item.path}
+                to={item.path}
+                $active={location.pathname === item.path}
+                onClick={handleNavClick}
+              >
+                {item.label}
+              </MobileNavLink>
+            ))}
+            <MobileDivider />
+            <MobileUserSection>
+              {isLoggedIn && user ? (
+                <>
+                  <MobileUserName>{user.username}님</MobileUserName>
+                  <MobileButtons>
+                    <SettingsButton
+                      onClick={() => { setShowTTSSettings(true); setMenuOpen(false); }}
+                      title="TTS 설정"
+                    >
+                      ⚙️
+                    </SettingsButton>
+                    <AuthButton onClick={() => { handleLogout(); setMenuOpen(false); }}>
+                      로그아웃
+                    </AuthButton>
+                  </MobileButtons>
+                </>
+              ) : (
+                <LoginLink to="/login" onClick={handleNavClick}>로그인</LoginLink>
+              )}
+            </MobileUserSection>
+          </MobileMenu>
         </Nav>
         <Main>{children}</Main>
       </LayoutWrapper>

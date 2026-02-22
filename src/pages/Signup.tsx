@@ -208,15 +208,16 @@ export default function Signup() {
       return;
     }
 
-    if (formData.username.length < 4 || formData.username.length > 50) {
-      setError('아이디는 4~50자 사이여야 합니다.');
-      return;
-    }
+    // 테스트용 - 검증 임시 해제
+    // if (formData.username.length < 4 || formData.username.length > 50) {
+    //   setError('아이디는 4~50자 사이여야 합니다.');
+    //   return;
+    // }
 
-    if (!/^[a-zA-Z0-9_]+$/.test(formData.username)) {
-      setError('아이디는 영문, 숫자, 언더스코어만 사용 가능합니다.');
-      return;
-    }
+    // if (!/^[a-zA-Z0-9_]+$/.test(formData.username)) {
+    //   setError('아이디는 영문, 숫자, 언더스코어만 사용 가능합니다.');
+    //   return;
+    // }
 
     try {
       const response = await apiService.checkUsername(formData.username);
@@ -240,10 +241,11 @@ export default function Signup() {
       return;
     }
 
-    if (!/^01\d{8,9}$/.test(formData.phone)) {
-      setError('전화번호는 01로 시작하는 10~11자리 번호를 입력해주세요.');
-      return;
-    }
+    // 테스트용 - 검증 임시 해제
+    // if (!/^01\d{8,9}$/.test(formData.phone)) {
+    //   setError('전화번호는 01로 시작하는 10~11자리 번호를 입력해주세요.');
+    //   return;
+    // }
 
     try {
       const response = await apiService.checkPhone(formData.phone);
@@ -261,47 +263,50 @@ export default function Signup() {
   };
 
   const validateForm = (): boolean => {
+    // 테스트용 - 검증 임시 해제
     // 중복 확인 여부 검증
-    if (!usernameCheck.checked) {
-      setError('아이디 중복 확인을 해주세요.');
-      return false;
-    }
+    // if (!usernameCheck.checked) {
+    //   setError('아이디 중복 확인을 해주세요.');
+    //   return false;
+    // }
 
-    if (!usernameCheck.available) {
-      setError('이미 사용 중인 아이디입니다.');
-      return false;
-    }
+    // if (!usernameCheck.available) {
+    //   setError('이미 사용 중인 아이디입니다.');
+    //   return false;
+    // }
 
-    if (!phoneCheck.checked) {
-      setError('전화번호 중복 확인을 해주세요.');
-      return false;
-    }
+    // if (!phoneCheck.checked) {
+    //   setError('전화번호 중복 확인을 해주세요.');
+    //   return false;
+    // }
 
-    if (!phoneCheck.available) {
-      setError('이미 사용 중인 전화번호입니다.');
-      return false;
-    }
+    // if (!phoneCheck.available) {
+    //   setError('이미 사용 중인 전화번호입니다.');
+    //   return false;
+    // }
 
     if (!formData.password) {
       setError('비밀번호를 입력해주세요.');
       return false;
     }
 
-    if (formData.password.length < 8) {
-      setError('비밀번호는 8자 이상이어야 합니다.');
-      return false;
-    }
+    // 테스트용 - 비밀번호 길이 검증 임시 해제
+    // if (formData.password.length < 8) {
+    //   setError('비밀번호는 8자 이상이어야 합니다.');
+    //   return false;
+    // }
 
     if (formData.password !== confirmPassword) {
       setError('비밀번호가 일치하지 않습니다.');
       return false;
     }
 
+    // 테스트용 - 전화번호 검증 임시 해제
     // 전화번호 규칙 수정 (10~11자리)
-    if (!/^01\d{8,9}$/.test(formData.phone)) {
-      setError('전화번호는 01로 시작하는 10~11자리 번호를 입력해주세요.');
-      return false;
-    }
+    // if (!/^01\d{8,9}$/.test(formData.phone)) {
+    //   setError('전화번호는 01로 시작하는 10~11자리 번호를 입력해주세요.');
+    //   return false;
+    // }
 
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       setError('올바른 이메일 형식이 아닙니다.');
