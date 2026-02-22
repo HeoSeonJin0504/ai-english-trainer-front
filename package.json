@@ -1,8 +1,12 @@
 {
   "name": "ai-english-trainer-front",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "AI English Trainer (React)",
   "type": "module",
+  "engines": {
+    "node": ">=20.19.0"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
