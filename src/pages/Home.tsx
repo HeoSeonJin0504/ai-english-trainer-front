@@ -34,49 +34,60 @@ const Container = styled.div`
 `;
 
 const Header = styled.header`
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
   margin-bottom: 4rem;
-  position: relative;
-
-  &::before {
-    content: "";
-    position: absolute;
-    top: -20px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 80px;
-    height: 4px;
-    background: linear-gradient(90deg, #3b82f6, #8b5cf6);
-    border-radius: 2px;
-  }
-
-  h1 {
-    font-size: 3rem;
-    margin-bottom: 1.25rem;
-    margin-top: 1.5rem;
-    color: #3f56a1;
-    font-weight: 800;
-    letter-spacing: -0.5px;
-
-    @media (max-width: 768px) {
-      font-size: 2rem;
-    }
-  }
 
   p {
-    font-size: 1.25rem;
+    font-size: 1.1rem;
     color: #64748b;
-    max-width: 600px;
-    margin: 0 auto;
     line-height: 1.7;
+    margin: 0;
 
     @media (max-width: 768px) {
-      font-size: 1rem;
+      font-size: 0.95rem;
     }
   }
 
   @media (max-width: 768px) {
     margin-bottom: 2.5rem;
+    gap: 1.25rem;
+  }
+`;
+
+const TitleRow = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+
+  h1 {
+    font-size: 3rem;
+    margin: 0;
+    color: #3f56a1;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+
+    @media (max-width: 768px) {
+      font-size: 1.75rem;
+    }
+  }
+`;
+
+const HomeLogoImg = styled.img`
+  width: 140px;
+  height: 140px;
+  object-fit: contain;
+  border-radius: 24px;
+  flex-shrink: 0;
+  filter: drop-shadow(0 4px 16px rgba(59, 130, 246, 0.25));
+
+  @media (max-width: 768px) {
+    width: 90px;
+    height: 90px;
+    border-radius: 16px;
   }
 `;
 
@@ -215,8 +226,11 @@ export default function Home() {
   return (
     <Container>
       <Header>
-        <h1>AI 영어 학습 도우미</h1>
-        <p>AI와 함께 효과적으로 영어를 학습하세요</p>
+        <HomeLogoImg src="/logo.png" alt="AI 영어 학습 로고" />
+        <TitleRow>
+          <h1>AI 영어 학습 도우미</h1>
+          <p>AI와 함께 효과적으로 영어를 학습하세요</p>
+        </TitleRow>
       </Header>
 
       <Features>

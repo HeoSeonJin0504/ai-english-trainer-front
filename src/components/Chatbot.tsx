@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import { apiService, type ChatMessage, type ConversationSession } from '../services/api';
 
-// Styled Components
 const FloatingButton = styled.button<{ $isOpen: boolean }>`
   position: fixed;
   bottom: 30px;
@@ -495,7 +494,7 @@ export function Chatbot() {
               <MessagesContainer>
                 {messages.length === 0 ? (
                   <WelcomeMessage>
-                    <h3>👋 Hello!</h3>
+                    <h3>Hello!</h3>
                     <p>AI ENGLSIH TRAINER 챗봇입니다.</p>
                     <p>궁금한 것을 물어보세요!</p>
                   </WelcomeMessage>

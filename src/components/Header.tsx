@@ -49,6 +49,9 @@ const LeftSection = styled.div`
 `;
 
 const Logo = styled(Link)`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   font-size: 1.5rem;
   font-weight: 700;
   color: white;
@@ -62,6 +65,18 @@ const Logo = styled(Link)`
 
   @media (max-width: 768px) {
     font-size: 1.25rem;
+  }
+`;
+
+const LogoImg = styled.img`
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  border-radius: 6px;
+
+  @media (max-width: 768px) {
+    width: 28px;
+    height: 28px;
   }
 `;
 
@@ -324,7 +339,10 @@ export function Header({ children }: HeaderProps) {
         <Nav>
           <NavContainer>
             <LeftSection>
-              <Logo to="/" onClick={handleNavClick}>AI 영어 학습</Logo>
+              <Logo to="/" onClick={handleNavClick}>
+                <LogoImg src="/logo.png" alt="로고" />
+                AI 영어 학습
+              </Logo>
               <NavLinks>
                 {navItems.map((item) => (
                   <NavLink
