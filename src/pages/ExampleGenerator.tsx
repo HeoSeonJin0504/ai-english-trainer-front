@@ -36,6 +36,14 @@ const Container = styled.div`
     font-size: 2.5rem;
     font-weight: 800;
     letter-spacing: -0.5px;
+
+    @media (max-width: 768px) {
+      font-size: 1.75rem;
+    }
+  }
+
+  @media (max-width: 768px) {
+    padding: 1rem;
   }
 `;
 
@@ -48,6 +56,10 @@ const InputCard = styled(Card)`
   &:hover {
     border-color: #3b82f6;
     box-shadow: 0 6px 20px rgba(59, 130, 246, 0.12);
+  }
+
+  @media (max-width: 480px) {
+    flex-direction: column;
   }
 `;
 
@@ -92,6 +104,10 @@ const WordTitle = styled.h3`
   font-weight: 800;
   color: #3f56a1;
   letter-spacing: -1px;
+
+  @media (max-width: 480px) {
+    font-size: 2rem;
+  }
 `;
 
 const WordHeader = styled.div`
@@ -169,6 +185,15 @@ const ExampleCard = styled(Card)`
     box-shadow: 0 6px 20px rgba(59, 130, 246, 0.12);
     border-color: #e0e7ff;
   }
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    gap: 0.75rem;
+
+    &:hover {
+      transform: none;
+    }
+  }
 `;
 
 const ExampleContent = styled.div`
@@ -218,12 +243,21 @@ const ExampleContent = styled.div`
 const SaveButton = styled(Button)`
   flex-shrink: 0;
   align-self: center;
+
+  @media (max-width: 480px) {
+    align-self: flex-end;
+    width: auto;
+  }
 `;
 
 const RelatedWordsGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1.5rem;
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
 `;
 
 const RelatedWordCard = styled(Card) <{ type: "synonym" | "antonym" }>`
@@ -373,6 +407,10 @@ const PageDescription = styled.div`
   .highlight {
     color: #3b82f6;
     font-weight: 700;
+  }
+
+  @media (max-width: 480px) {
+    display: none;
   }
 `;
 

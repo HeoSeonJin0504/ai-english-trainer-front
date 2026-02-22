@@ -31,6 +31,14 @@ const Container = styled.div`
     font-size: 2.5rem;
     font-weight: 800;
     letter-spacing: -0.5px;
+
+    @media (max-width: 768px) {
+      font-size: 1.75rem;
+    }
+  }
+
+  @media (max-width: 768px) {
+    padding: 1rem;
   }
 `;
 
@@ -39,6 +47,10 @@ const TabContainer = styled.div`
   gap: 0.5rem;
   margin-bottom: 1.5rem;
   border-bottom: 2px solid #e5e7eb;
+
+  @media (max-width: 480px) {
+    gap: 0;
+  }
 `;
 
 const Tab = styled.button<{ $active: boolean }>`
@@ -56,6 +68,12 @@ const Tab = styled.button<{ $active: boolean }>`
   &:hover {
     color: #3b82f6;
   }
+
+  @media (max-width: 480px) {
+    flex: 1;
+    padding: 0.75rem 0.5rem;
+    font-size: 0.9rem;
+  }
 `;
 
 const FilterSection = styled(Card)`
@@ -70,11 +88,17 @@ const FilterSection = styled(Card)`
     border-color: #3b82f6;
     box-shadow: 0 6px 20px rgba(59, 130, 246, 0.12);
   }
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: stretch;
+  }
 `;
 
 const PartFilter = styled.div`
   display: flex;
   gap: 0.5rem;
+  flex-wrap: wrap;
 `;
 
 const PartButton = styled.button<{ $active: boolean }>`
@@ -97,7 +121,12 @@ const SearchRow = styled.div`
   display: flex;
   gap: 1rem;
   flex: 1;
-  min-width: 300px;
+  min-width: 200px;
+
+  @media (max-width: 480px) {
+    min-width: 0;
+    width: 100%;
+  }
 `;
 
 const QuestionList = styled.div`
@@ -124,6 +153,31 @@ const QuestionHeader = styled.div`
   margin-bottom: 1rem;
   padding-bottom: 1rem;
   border-bottom: 2px solid #f1f5f9;
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+`;
+
+const CardFooter = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #f1f5f9;
+`;
+
+const DeleteBtn = styled(Button)`
+  padding: 0.4rem 0.9rem;
+  font-size: 0.85rem;
+`;
+
+const DateText = styled.div`
+  color: #94a3b8;
+  font-size: 0.85rem;
+  text-align: right;
 `;
 
 const QuestionMeta = styled.div`
@@ -247,15 +301,6 @@ const Explanation = styled.div`
     font-weight: 600;
     color: #3b82f6;
   }
-`;
-
-const DateText = styled.div`
-  text-align: right;
-  color: #94a3b8;
-  font-size: 0.85rem;
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid #f1f5f9;
 `;
 
 const EmptyCard = styled(Card)`
@@ -425,9 +470,6 @@ export default function MyQuestions() {
                   {q.writingType && <span className="badge part">{q.writingType}</span>}
                   <span className="badge topic">📝 {q.topic}</span>
                 </QuestionMeta>
-                <Button onClick={() => handleDelete(q.id)} variant="danger" style={{ padding: '0.5rem 1rem' }}>
-                  삭제
-                </Button>
               </QuestionHeader>
 
               <QuestionContent>
@@ -459,15 +501,20 @@ export default function MyQuestions() {
 
               {q.explanation && <Explanation>{q.explanation}</Explanation>}
 
-              <DateText>
-                {new Date(q.createdAt).toLocaleDateString('ko-KR', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}
-              </DateText>
+              <CardFooter>
+                <DeleteBtn onClick={() => handleDelete(q.id)} variant="danger">
+                  삭제
+                </DeleteBtn>
+                <DateText>
+                  {new Date(q.createdAt).toLocaleDateString('ko-KR', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </DateText>
+              </CardFooter>
             </QuestionCard>
           ))}
         </QuestionList>

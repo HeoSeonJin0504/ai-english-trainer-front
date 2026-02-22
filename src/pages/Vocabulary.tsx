@@ -32,6 +32,14 @@ const Container = styled.div`
     font-size: 2.5rem;
     font-weight: 800;
     letter-spacing: -0.5px;
+
+    @media (max-width: 768px) {
+      font-size: 1.75rem;
+    }
+  }
+
+  @media (max-width: 768px) {
+    padding: 1rem;
   }
 `;
 
@@ -45,6 +53,11 @@ const SearchSection = styled(Card)`
   &:hover {
     border-color: #3b82f6;
     box-shadow: 0 6px 20px rgba(59, 130, 246, 0.12);
+  }
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: stretch;
   }
 `;
 const SearchInfo = styled.div`
@@ -162,17 +175,39 @@ const WordContent = styled.div`
     gap: 0.5rem;
   }
 
+  .word-section-left {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+  }
+
+  .word-section-actions {
+    display: none;
+    gap: 0.4rem;
+    flex-shrink: 0;
+
+    @media (max-width: 480px) {
+      display: flex;
+    }
+  }
+
   .word-title {
     font-size: 2rem;
     font-weight: bold;
     color: #1e40af;
     line-height: 1;
+
+    @media (max-width: 480px) {
+      font-size: 1.5rem;
+    }
   }
 
   .word-meta {
     display: flex;
     gap: 0.75rem;
     align-items: center;
+    flex-wrap: wrap;
 
     .badge {
       background: #eff6ff;
@@ -193,25 +228,42 @@ const WordContent = styled.div`
 
 const WordFooter = styled.div`
   display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
+  flex-direction: column;
+  gap: 0.75rem;
   margin-top: auto;
   padding-top: 1rem;
+
+  .button-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .button-row-actions {
+    display: flex;
+    gap: 0.5rem;
+
+    @media (max-width: 480px) {
+      display: none;
+    }
+  }
 
   .date-info {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.4rem;
 
     .label {
       color: #64748b;
       font-size: 0.8rem;
       font-weight: 600;
+      white-space: nowrap;
     }
 
     .date {
       color: #94a3b8;
-      font-size: 0.85rem;
+      font-size: 0.8rem;
+      white-space: nowrap;
     }
   }
 `;
@@ -251,6 +303,10 @@ const ExampleContent = styled.div`
     font-weight: 600;
     font-size: 1.5rem;
     line-height: 1.5;
+
+    @media (max-width: 480px) {
+      font-size: 1.15rem;
+    }
   }
 
   .korean {
@@ -262,15 +318,22 @@ const ExampleContent = styled.div`
 
 const ExampleFooter = styled.div`
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  gap: 0.75rem;
   margin-top: auto;
   padding-top: 1rem;
+
+  .button-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
 
   .left-info {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 0.75rem;
+    flex-wrap: wrap;
 
     .linked-word {
       padding: 0.4rem 0.8rem;
@@ -288,17 +351,19 @@ const ExampleFooter = styled.div`
     .date-info {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.4rem;
 
       .label {
         color: #64748b;
         font-size: 0.8rem;
         font-weight: 600;
+        white-space: nowrap;
       }
 
       .date {
         color: #94a3b8;
-        font-size: 0.85rem;
+        font-size: 0.8rem;
+        white-space: nowrap;
       }
     }
   }
@@ -521,8 +586,21 @@ export default function Vocabulary() {
                   <WordCard key={word.id}>
                     <WordContent>
                       <div className="word-section">
-                        <div className="word-title">{word.word}</div>
-                        <SpeakerButton text={word.word} size="small" />
+                        <div className="word-section-left">
+                          <div className="word-title">{word.word}</div>
+                          <SpeakerButton text={word.word} size="small" />
+                        </div>
+                        <div className="word-section-actions">
+                          <ToggleButton onClick={() => toggleMeaning(word.id)}>
+                            {isMeaningVisible(word.id) ? '뜻 숨기기' : '뜻 보기'}
+                          </ToggleButton>
+                          <DeleteButton
+                            onClick={() => handleDeleteWord(word.id)}
+                            variant="danger"
+                          >
+                            삭제
+                          </DeleteButton>
+                        </div>
                       </div>
                       {isMeaningVisible(word.id) && (
                         <div className="word-meta">
@@ -532,28 +610,30 @@ export default function Vocabulary() {
                       )}
                     </WordContent>
                     <WordFooter>
-                      <div className="date-info">
-                        <span className="label">저장일:</span>
-                        <span className="date">
-                          {new Date(word.createdAt).toLocaleDateString('ko-KR', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </span>
-                      </div>
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <ToggleButton onClick={() => toggleMeaning(word.id)}>
-                          {isMeaningVisible(word.id) ? '뜻 숨기기' : '뜻 보기'}
-                        </ToggleButton>
-                        <DeleteButton 
-                          onClick={() => handleDeleteWord(word.id)}
-                          variant="danger"
-                        >
-                          삭제
-                        </DeleteButton>
+                      <div className="button-row">
+                        <div className="date-info">
+                          <span className="label">저장일:</span>
+                          <span className="date">
+                            {new Date(word.createdAt).toLocaleDateString('ko-KR', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </span>
+                        </div>
+                        <div className="button-row-actions">
+                          <ToggleButton onClick={() => toggleMeaning(word.id)}>
+                            {isMeaningVisible(word.id) ? '뜻 숨기기' : '뜻 보기'}
+                          </ToggleButton>
+                          <DeleteButton
+                            onClick={() => handleDeleteWord(word.id)}
+                            variant="danger"
+                          >
+                            삭제
+                          </DeleteButton>
+                        </div>
                       </div>
                     </WordFooter>
                   </WordCard>
@@ -608,16 +688,18 @@ export default function Vocabulary() {
                           </span>
                         </div>
                       </div>
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <ToggleButton onClick={() => toggleMeaning(example.id)}>
-                          {isMeaningVisible(example.id) ? '뜻 숨기기' : '뜻 보기'}
-                        </ToggleButton>
-                        <DeleteButton 
-                          onClick={() => handleDeleteExample(example.id)}
-                          variant="danger"
-                        >
-                          삭제
-                        </DeleteButton>
+                      <div className="button-row" style={{ justifyContent: 'flex-end' }}>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <ToggleButton onClick={() => toggleMeaning(example.id)}>
+                            {isMeaningVisible(example.id) ? '뜻 숨기기' : '뜻 보기'}
+                          </ToggleButton>
+                          <DeleteButton 
+                            onClick={() => handleDeleteExample(example.id)}
+                            variant="danger"
+                          >
+                            삭제
+                          </DeleteButton>
+                        </div>
                       </div>
                     </ExampleFooter>
                   </ExampleCard>

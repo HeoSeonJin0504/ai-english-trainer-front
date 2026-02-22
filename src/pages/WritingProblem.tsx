@@ -41,6 +41,14 @@ const Container = styled.div`
     font-size: 2.5rem;
     font-weight: 800;
     letter-spacing: -0.5px;
+
+    @media (max-width: 768px) {
+      font-size: 1.75rem;
+    }
+  }
+
+  @media (max-width: 768px) {
+    padding: 1rem;
   }
 `;
 
@@ -69,6 +77,10 @@ const PageDescription = styled.div`
     color: #3b82f6;
     font-weight: 700;
   }
+
+  @media (max-width: 480px) {
+    display: none;
+  }
 `;
 
 const ModeSelector = styled.div`
@@ -76,6 +88,10 @@ const ModeSelector = styled.div`
   gap: 1rem;
   margin-bottom: 1.5rem;
   justify-content: center;
+
+  @media (max-width: 480px) {
+    gap: 0.5rem;
+  }
 `;
 
 const ModeButton = styled.button<{ $active: boolean }>`
@@ -92,11 +108,20 @@ const ModeButton = styled.button<{ $active: boolean }>`
     border-color: #3b82f6;
     background: ${(props) => (props.$active ? "#0442a5" : "#eff6ff")};
   }
+
+  @media (max-width: 480px) {
+    padding: 0.6rem 1.25rem;
+    font-size: 0.9rem;
+  }
 `;
 
 const InputRow = styled.div`
   display: flex;
   gap: 1rem;
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+  }
 `;
 
 const Results = styled.div`
