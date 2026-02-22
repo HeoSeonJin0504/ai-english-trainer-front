@@ -324,9 +324,9 @@ export function Header({ children }: HeaderProps) {
     { path: '/my-questions', label: '저장된 문제' }
   ];
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     if (confirm('로그아웃 하시겠습니까?')) {
-      apiService.logout();
+      await apiService.logout(); // ✅ async 함수로 변경됨
       navigate('/login');
     }
   };

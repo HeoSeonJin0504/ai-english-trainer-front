@@ -7,21 +7,13 @@ const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true, // ✅ httpOnly Cookie 전송을 위해 필수
 });
 
-// JWT 토큰 자동 추가 인터셉터 (auth 경로는 제외)
+// ✅ httpOnly Cookie 방식으로 변경되어 토큰 헤더 추가 불필요
+// 요청 인터셉터 (필요시 추가 설정용)
 apiClient.interceptors.request.use(
   (config) => {
-    // /auth/** 경로는 토큰 불필요
-    const isAuthPath = config.url?.startsWith('/auth/');
-    
-    if (!isAuthPath) {
-      const token = localStorage.getItem('accessToken');
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-    }
-    
     return config;
   },
   (error) => {
@@ -41,8 +33,7 @@ apiClient.interceptors.response.use(
       
       // auth 경로가 아닌 경우에만 로그아웃 처리
       if (!isAuthPath) {
-        console.warn('인증 오류: 토큰이 만료되었거나 유효하지 않습니다.');
-        localStorage.removeItem('accessToken');
+        console.warn('인증 오류: 로그인이 필요합니다.');
         localStorage.removeItem('user');
         
         // 현재 페이지가 로그인/회원가입이 아닌 경우에만 리다이렉트
@@ -79,10 +70,7 @@ export interface User {
 }
 
 export interface LoginResponse {
-  accessToken: string;
-  tokenType: string;
-  expiresIn: number;
-  user: User;
+  user: User; // ✅ 토큰은 httpOnly Cookie로 전달되므로 응답 바디에서 제거됨
 }
 
 export interface ApiResponse<T> {
@@ -344,7 +332,8 @@ export interface ConversationHistory {
 
 // 챗봇 에러 응답 타입
 export interface ChatErrorResponse {
-  error: string;
+  success: false;
+  message: string;
 }
 
 // 챗봇 성공 응답 타입
@@ -405,16 +394,10 @@ export const apiService = {
         password
       });
       
-      // 토큰과 사용자 정보 저장
+      // ✅ 사용자 정보만 저장 (토큰은 httpOnly Cookie로 자동 관리됨)
       if (response.data.success && response.data.data) {
-        const { accessToken, expiresIn, user } = response.data.data;
-        
-        localStorage.setItem('accessToken', accessToken);
+        const { user } = response.data.data;
         localStorage.setItem('user', JSON.stringify(user));
-        
-        // 토큰 만료 시간 저장 (선택사항)
-        const expiryTime = Date.now() + expiresIn;
-        localStorage.setItem('tokenExpiry', expiryTime.toString());
       }
       
       return response.data;
@@ -424,10 +407,16 @@ export const apiService = {
   },
 
   // 로그아웃
-  logout() {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('user');
-    localStorage.removeItem('tokenExpiry');
+  async logout() {
+    try {
+      // ✅ 서버에 로그아웃 요청하여 httpOnly Cookie 삭제
+      await apiClient.post('/auth/logout');
+    } catch (error) {
+      console.error('로그아웃 API 호출 실패:', error);
+    } finally {
+      // 로컬 저장소의 사용자 정보 삭제
+      localStorage.removeItem('user');
+    }
   },
 
   // 현재 사용자 정보 가져오기
@@ -436,26 +425,10 @@ export const apiService = {
     return userStr ? JSON.parse(userStr) : null;
   },
 
-  // 로그인 여부 확인
+  // 로그인 여부 확인 (user 정보 기반)
   isLoggedIn(): boolean {
-    const token = localStorage.getItem('accessToken');
-    const expiry = localStorage.getItem('tokenExpiry');
-    
-    if (!token) return false;
-    
-    // 토큰 만료 확인 (선택사항)
-    if (expiry && Date.now() > parseInt(expiry)) {
-      this.logout();
-      return false;
-    }
-    
-    return true;
-  },
-
-  // 토큰 만료 시간 확인 (선택사항)
-  getTokenExpiry(): number | null {
-    const expiry = localStorage.getItem('tokenExpiry');
-    return expiry ? parseInt(expiry) : null;
+    const user = this.getCurrentUser();
+    return user !== null;
   },
 
   // 예문 생성
@@ -827,7 +800,7 @@ export const apiService = {
       return response.data.data;
     } catch (error: any) {
       if (error.response?.status === 400) {
-        const errorMsg = error.response?.data?.error;
+        const errorMsg = error.response?.data?.message;
         if (errorMsg === 'Message is required') {
           throw new Error('메시지를 입력해주세요.');
         }
@@ -839,7 +812,7 @@ export const apiService = {
       if (error.response?.status === 500) {
         throw new Error('챗봇 응답 생성에 실패했습니다. 잠시 후 다시 시도해주세요.');
       }
-      throw new Error(error.response?.data?.error || '메시지 전송에 실패했습니다.');
+      throw new Error(error.response?.data?.message || '메시지 전송에 실패했습니다.');
     }
   },
 
@@ -849,7 +822,7 @@ export const apiService = {
       const response = await apiClient.get<ChatSuccessResponse<ConversationSession[]>>('/chat/conversations');
       return response.data.data;
     } catch (error: any) {
-      throw new Error(error.response?.data?.error || '대화 목록을 불러오는데 실패했습니다.');
+      throw new Error(error.response?.data?.message || '대화 목록을 불러오는데 실패했습니다.');
     }
   },
 
@@ -862,7 +835,7 @@ export const apiService = {
       if (error.response?.status === 404) {
         throw new Error('대화를 찾을 수 없습니다.');
       }
-      throw new Error(error.response?.data?.error || '대화 히스토리를 불러오는데 실패했습니다.');
+      throw new Error(error.response?.data?.message || '대화 히스토리를 불러오는데 실패했습니다.');
     }
   },
 
@@ -874,7 +847,7 @@ export const apiService = {
       if (error.response?.status === 404) {
         throw new Error('대화를 찾을 수 없습니다.');
       }
-      throw new Error(error.response?.data?.error || '대화 삭제에 실패했습니다.');
+      throw new Error(error.response?.data?.message || '대화 삭제에 실패했습니다.');
     }
   },
 };
