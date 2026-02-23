@@ -140,7 +140,7 @@ function calculateLengthScore(userAnswer: string, modelAnswer: string): number {
 /**
  * 점수에 따른 피드백 생성
  */
-function generateFeedback(score: number, userAnswer: string, modelAnswer: string): string {
+function generateFeedback(score: number, _userAnswer: string, _modelAnswer: string): string {
   if (score >= 90) {
     return '훌륭합니다! 거의 완벽한 답안입니다.';
   } else if (score >= 75) {
