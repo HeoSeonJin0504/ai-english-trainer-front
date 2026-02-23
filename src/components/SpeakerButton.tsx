@@ -107,7 +107,6 @@ export function SpeakerButton({
   text,
   size = "medium",
   variant = "icon",
-  speed = "normal",
 }: SpeakerButtonProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [useFallback, setUseFallback] = useState(false);

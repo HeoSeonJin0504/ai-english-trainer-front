@@ -12,8 +12,6 @@ function PrivateRoute({ children }: { children: React.ReactElement }) {
 
 // ✅ 로그인 상태를 라우트 변경마다 재평가하는 래퍼
 function AppContent() {
-  const location = useLocation();
-  // 라우트 변경 시마다 로그인 상태를 다시 확인
   const isLoggedIn = apiService.isLoggedIn();
 
   return (

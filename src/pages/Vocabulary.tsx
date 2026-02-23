@@ -112,15 +112,6 @@ const ToggleButton = styled(Button)`
   flex-shrink: 0;
 `;
 
-const DateText = styled.p`
-  color: #94a3b8;
-  font-size: 0.85rem;
-  text-align: right;
-  margin-top: 1rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid #f1f5f9;
-`;
-
 const TabContainer = styled.div`
   display: flex;
   gap: 0.5rem;
