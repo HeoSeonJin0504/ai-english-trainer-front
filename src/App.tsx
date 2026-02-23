@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate} from 'react-router-dom';
 import { Home, ExampleGenerator, WritingProblem, Vocabulary, MyQuestions, Login, Signup } from './pages';
 import { Header } from './components/Header';
@@ -12,7 +13,20 @@ function PrivateRoute({ children }: { children: React.ReactElement }) {
 
 // ✅ 로그인 상태를 라우트 변경마다 재평가하는 래퍼
 function AppContent() {
-  const isLoggedIn = apiService.isLoggedIn();
+  const [isLoggedIn, setIsLoggedIn] = useState(apiService.isLoggedIn());
+
+  useEffect(() => {
+    const handleAuthChange = () => {
+      setIsLoggedIn(apiService.isLoggedIn());
+    };
+
+    // 인증 상태 변경 이벤트 리스너 등록
+    window.addEventListener('authStateChanged', handleAuthChange);
+
+    return () => {
+      window.removeEventListener('authStateChanged', handleAuthChange);
+    };
+  }, []);
 
   return (
     <Header>
@@ -20,11 +34,9 @@ function AppContent() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         
-        <Route path="/" element={
-          <PrivateRoute>
-            <Home />
-          </PrivateRoute>
-        } />
+        {/* Home은 비로그인도 접근 가능 */}
+        <Route path="/" element={<Home />} />
+        
         <Route path="/example" element={
           <PrivateRoute>
             <ExampleGenerator />

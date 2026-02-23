@@ -398,6 +398,8 @@ export const apiService = {
       if (response.data.success && response.data.data) {
         const { user } = response.data.data;
         localStorage.setItem('user', JSON.stringify(user));
+        // 로그인 상태 변경 이벤트 발생
+        window.dispatchEvent(new Event('authStateChanged'));
       }
       
       return response.data;
@@ -416,6 +418,8 @@ export const apiService = {
     } finally {
       // 로컬 저장소의 사용자 정보 삭제
       localStorage.removeItem('user');
+      // 로그아웃 상태 변경 이벤트 발생
+      window.dispatchEvent(new Event('authStateChanged'));
     }
   },
 
