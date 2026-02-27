@@ -57,6 +57,47 @@ const ButtonGroup = styled.div`
   }
 `;
 
+const Divider = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+  color: #9ca3af;
+  font-size: 0.85rem;
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #e5e7eb;
+  }
+`;
+
+const TestLoginButton = styled.button`
+  width: 100%;
+  margin-top: 0.75rem;
+  padding: 0.6rem 1rem;
+  background: #f3f4f6;
+  color: #374151;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+
+  &:hover:not(:disabled) {
+    background: #e5e7eb;
+    border-color: #9ca3af;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
 const SignupLink = styled.div`
   text-align: center;
   margin-top: 1.5rem;
@@ -74,6 +115,9 @@ const SignupLink = styled.div`
   }
 `;
 
+const TEST_USERNAME = import.meta.env.VITE_TEST_USERNAME || '';
+const TEST_PASSWORD = import.meta.env.VITE_TEST_PASSWORD || '';
+
 export default function Login() {
   const navigate = useNavigate();
   const [username, setUsername] = useState('');
@@ -81,25 +125,34 @@ export default function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!username.trim() || !password.trim()) {
+  const handleLogin = async (id: string, pw: string) => {
+    if (!id.trim() || !pw.trim()) {
       setError('아이디와 비밀번호를 입력해주세요.');
       return;
     }
-
     setLoading(true);
     setError('');
-
     try {
-      await apiService.login(username, password);
+      await apiService.login(id, pw);
       navigate('/');
     } catch (err: any) {
       setError(err.message || '로그인에 실패했습니다.');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleTestLogin = () => {
+    if (!TEST_USERNAME || !TEST_PASSWORD) {
+      setError('테스트 계정 정보가 설정되지 않았습니다. (.env 파일의 VITE_TEST_USERNAME / VITE_TEST_PASSWORD 확인)');
+      return;
+    }
+    handleLogin(TEST_USERNAME, TEST_PASSWORD);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    handleLogin(username, password);
   };
 
   return (
@@ -139,6 +192,11 @@ export default function Login() {
               {loading ? '로그인 중...' : '로그인'}
             </Button>
           </ButtonGroup>
+
+          <Divider>또는</Divider>
+          <TestLoginButton type="button" onClick={handleTestLogin} disabled={loading}>
+            {loading ? '로그인 중...' : '테스트 계정으로 로그인'}
+          </TestLoginButton>
         </form>
 
         <SignupLink>

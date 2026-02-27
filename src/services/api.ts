@@ -511,11 +511,17 @@ export const apiService = {
   // 단어 저장
   async saveWord(data: SaveWordRequest): Promise<ApiResponse<WordDto>> {
     try {
-      const response = await apiClient.post<ApiResponse<WordDto>>('/words', data);
+      // 409는 의도된 응답(중복)이므로 validateStatus로 에러 처리 대상에서 제외 → 콘솔 에러 미출력
+      const response = await apiClient.post<ApiResponse<WordDto>>('/words', data, {
+        validateStatus: (status) => (status >= 200 && status < 300) || status === 409,
+      });
+      if (response.status === 409) {
+        throw new Error('이미 저장된 단어입니다.');
+      }
       return response.data;
     } catch (error: any) {
-      if (error.response?.status === 409) {
-        throw new Error('이미 저장된 단어입니다.');
+      if (error.message === '이미 저장된 단어입니다.') {
+        throw error;
       }
       throw new Error(error.response?.data?.message || '단어 저장에 실패했습니다.');
     }
