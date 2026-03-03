@@ -457,21 +457,18 @@ export const apiService = {
       
       return response.data.data;
     } catch (error: any) {
-      // 이미 생성된 에러 메시지가 있으면 그대로 전달
-      if (error.message) {
-        throw error;
+      // axios 에러인 경우 (HTTP 응답이 있는 경우) → 상태 코드별 처리
+      if (error.response) {
+        if (error.response.status === 400) {
+          throw new Error(error.response.data?.message || '유효한 영어 단어가 아닙니다.');
+        }
+        if (error.response.status === 503) {
+          throw new Error('AI 서비스가 일시적으로 사용 불가능합니다. 잠시 후 다시 시도해주세요.');
+        }
+        throw new Error(error.response.data?.message || '서버 오류가 발생했습니다.');
       }
-      
-      // HTTP 상태 코드별 처리
-      if (error.response?.status === 400) {
-        throw new Error(error.response?.data?.message || '유효한 영어 단어가 아닙니다.');
-      }
-      
-      if (error.response?.status === 503) {
-        throw new Error('AI 서비스가 일시적으로 사용 불가능합니다. 잠시 후 다시 시도해주세요.');
-      }
-      
-      throw new Error(error.response?.data?.message || '서버 오류가 발생했습니다.');
+      // 커스텀 에러 (try 블록 내 throw new Error(...)) → 그대로 전달
+      throw error;
     }
   },
 
