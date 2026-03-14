@@ -5,3 +5,5 @@ export { default as Vocabulary } from './Vocabulary';
 export { default as MyQuestions } from './MyQuestions';
 export { default as Login } from './Login';
 export { default as Signup } from './Signup';
+export { default as OAuthSuccess } from './OAuthSuccess';
+export { default as OAuthFailure } from './OAuthFailure';

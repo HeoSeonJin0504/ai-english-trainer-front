@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate} from 'react-router-dom';
-import { Home, ExampleGenerator, WritingProblem, Vocabulary, MyQuestions, Login, Signup } from './pages';
+import { Home, ExampleGenerator, WritingProblem, Vocabulary, MyQuestions, Login, Signup, OAuthSuccess, OAuthFailure } from './pages';
 import { Header } from './components/Header';
 import { Chatbot } from './components/Chatbot';
 import { apiService } from './services/api';
@@ -33,6 +33,8 @@ function AppContent() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/oauth/success" element={<OAuthSuccess />} />
+        <Route path="/oauth/failure" element={<OAuthFailure />} />
         
         {/* Home은 비로그인도 접근 가능 */}
         <Route path="/" element={<Home />} />
