@@ -228,7 +228,7 @@ export default function Home() {
       <Header>
         <HomeLogoImg src="/logo.png" alt="AI 영어 학습 로고" />
         <TitleRow>
-          <h1>AI 영어 학습 도우미</h1>
+          <h1>AI 영어 파트너</h1>
           <p>AI와 함께 효과적으로 영어를 학습하세요</p>
         </TitleRow>
       </Header>

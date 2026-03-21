@@ -341,7 +341,7 @@ export function Header({ children }: HeaderProps) {
             <LeftSection>
               <Logo to="/" onClick={handleNavClick}>
                 <LogoImg src="/logo.png" alt="로고" />
-                AI 영어 학습
+                AI 영어 파트너
               </Logo>
               <NavLinks>
                 {navItems.map((item) => (
